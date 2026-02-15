@@ -1,0 +1,507 @@
+<!DOCTYPE html>
+<html lang="no" dir="ltr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aqidah 101 - Koranvers Quiz</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Amiri&family=Inter:wght@400;500;600;700&display=swap');
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #0f1923 0%, #1a2a3a 50%, #0f1923 100%);
+            min-height: 100vh; color: #e0e0e0;
+        }
+        .header {
+            text-align: center; padding: 1.5rem 1rem;
+            background: linear-gradient(180deg, rgba(212,175,55,0.15) 0%, transparent 100%);
+            border-bottom: 2px solid rgba(212,175,55,0.3);
+        }
+        .header .bismillah { font-family: 'Amiri', serif; font-size: 1.6rem; color: #d4af37; margin-bottom: 0.5rem; direction: rtl; }
+        .header h1 { font-size: 1.6rem; color: #d4af37; margin-bottom: 0.3rem; }
+        .header p { color: #a0b0c0; font-size: 0.9rem; }
+        .container { max-width: 750px; margin: 0 auto; padding: 1.5rem; }
+
+        .top-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; color: #a0b0c0; font-size: 0.9rem; }
+        .top-bar .score span { font-weight: 600; }
+        .progress-container { background: rgba(255,255,255,0.06); border-radius: 20px; height: 8px; margin-bottom: 1.5rem; overflow: hidden; }
+        .progress-bar { height: 100%; background: linear-gradient(90deg, #d4af37, #f0d060); border-radius: 20px; transition: width 0.5s ease; width: 0%; }
+
+        .card {
+            background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 16px; padding: 2rem; margin-bottom: 1.5rem;
+        }
+        .q-number { font-size: 0.8rem; color: #d4af37; text-transform: uppercase; letter-spacing: 2px; font-weight: 600; margin-bottom: 0.8rem; }
+        .q-text { font-size: 1.1rem; color: #e8e8e8; line-height: 1.7; margin-bottom: 1.5rem; }
+
+        .options { display: flex; flex-direction: column; gap: 0.7rem; }
+        .opt {
+            padding: 1rem 1.2rem; border: 2px solid rgba(255,255,255,0.1);
+            background: rgba(255,255,255,0.03); border-radius: 12px; color: #e0e0e0;
+            font-size: 1rem; cursor: pointer; transition: all 0.25s; text-align: left;
+            font-family: 'Inter', sans-serif; display: flex; align-items: center; gap: 0.8rem;
+        }
+        .opt:hover:not(.disabled) { border-color: rgba(212,175,55,0.5); background: rgba(212,175,55,0.08); }
+        .opt .letter {
+            min-width: 30px; height: 30px; line-height: 30px; text-align: center;
+            border-radius: 50%; background: rgba(212,175,55,0.15);
+            color: #d4af37; font-weight: 600; font-size: 0.9rem; flex-shrink: 0;
+        }
+        .opt.correct { border-color: #4caf50; background: rgba(76,175,80,0.15); color: #a5d6a7; }
+        .opt.correct .letter { background: rgba(76,175,80,0.3); color: #a5d6a7; }
+        .opt.wrong { border-color: #f44336; background: rgba(244,67,54,0.12); color: #ef9a9a; }
+        .opt.wrong .letter { background: rgba(244,67,54,0.2); color: #ef9a9a; }
+        .opt.disabled { cursor: default; opacity: 0.5; }
+        .opt.disabled.correct { opacity: 1; }
+
+        /* Verse reveal box */
+        .verse-reveal {
+            margin-top: 1.5rem; padding: 1.2rem; border-radius: 12px; display: none;
+            background: rgba(76,175,80,0.06); border: 1px solid rgba(76,175,80,0.2);
+        }
+        .verse-reveal.show { display: block; animation: fadeIn 0.4s ease; }
+        .verse-reveal.wrong-box { background: rgba(244,67,54,0.06); border-color: rgba(244,67,54,0.2); }
+        .verse-reveal .vr-label { font-size: 0.8rem; color: #81c784; margin-bottom: 0.6rem; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; }
+        .verse-reveal.wrong-box .vr-label { color: #ef9a9a; }
+        .verse-reveal .vr-ref { font-size: 1rem; color: #d4af37; font-weight: 600; margin-bottom: 0.8rem; }
+        .verse-reveal .vr-arabic {
+            font-family: 'Amiri', serif; direction: rtl; text-align: right;
+            font-size: 1.4rem; line-height: 2.2; color: #f0d060;
+            padding: 1rem; background: rgba(212,175,55,0.06); border-radius: 8px;
+            margin-bottom: 0.8rem; border: 1px solid rgba(212,175,55,0.1);
+        }
+        .verse-reveal .vr-norsk {
+            font-size: 0.9rem; color: #b0c0d0; line-height: 1.7; font-style: italic;
+            padding-left: 0.8rem; border-left: 3px solid rgba(212,175,55,0.3);
+        }
+
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+
+        .next-btn {
+            display: none; width: 100%; padding: 1rem;
+            background: linear-gradient(135deg, #d4af37, #c49b2f);
+            color: #0f1923; border: none; border-radius: 12px;
+            font-size: 1.05rem; font-weight: 600; cursor: pointer;
+            transition: all 0.3s; font-family: 'Inter', sans-serif; margin-top: 1.2rem;
+        }
+        .next-btn:hover { background: linear-gradient(135deg, #e0c050, #d4af37); }
+        .next-btn.show { display: block; }
+
+        /* Results */
+        .results { text-align: center; padding: 2rem 0; display: none; }
+        .results.show { display: block; }
+        .results h2 { color: #d4af37; margin-bottom: 0.5rem; }
+        .results .big-score { font-size: 4rem; font-weight: 700; color: #d4af37; margin: 0.5rem 0; }
+        .results .msg { color: #a0b0c0; font-size: 1.1rem; margin-bottom: 2rem; line-height: 1.6; }
+        .results .stats {
+            background: rgba(255,255,255,0.04); border-radius: 12px; padding: 1.5rem;
+            margin-bottom: 2rem; border: 1px solid rgba(255,255,255,0.08);
+        }
+        .results .stat { display: flex; justify-content: space-between; padding: 0.5rem 0; border-bottom: 1px solid rgba(255,255,255,0.05); }
+        .results .stat:last-child { border-bottom: none; }
+        .review-section { text-align: left; margin-top: 1.5rem; }
+        .review-section h3 { color: #d4af37; margin-bottom: 1rem; font-size: 1rem; }
+        .review-item {
+            background: rgba(244,67,54,0.06); border: 1px solid rgba(244,67,54,0.15);
+            border-radius: 10px; padding: 1rem; margin-bottom: 0.8rem; font-size: 0.9rem;
+        }
+        .review-item .ri-q { color: #e0e0e0; margin-bottom: 0.4rem; font-weight: 500; }
+        .review-item .ri-your { color: #ef9a9a; margin-bottom: 0.2rem; }
+        .review-item .ri-correct { color: #a5d6a7; }
+        .btn-row { display: flex; gap: 0.8rem; justify-content: center; flex-wrap: wrap; }
+        .restart-btn {
+            padding: 0.9rem 2rem; background: linear-gradient(135deg, #d4af37, #c49b2f);
+            color: #0f1923; border: none; border-radius: 12px;
+            font-size: 1rem; font-weight: 600; cursor: pointer; font-family: 'Inter', sans-serif;
+        }
+        .restart-btn:hover { background: linear-gradient(135deg, #e0c050, #d4af37); }
+        .hidden { display: none !important; }
+        @media (max-width: 600px) {
+            .header { padding: 0.7rem 0.8rem; }
+            .header .bismillah { font-size: 1.1rem; margin-bottom: 0.2rem; }
+            .header h1 { font-size: 1rem; margin-bottom: 0.1rem; }
+            .header p { font-size: 0.75rem; }
+            .container { padding: 0.7rem; }
+            .top-bar { font-size: 0.78rem; margin-bottom: 0.5rem; }
+            .progress-container { height: 5px; margin-bottom: 0.7rem; }
+            .card { padding: 0.9rem; margin-bottom: 0.8rem; border-radius: 12px; }
+            .q-number { font-size: 0.7rem; margin-bottom: 0.4rem; letter-spacing: 1.5px; }
+            .q-text { font-size: 0.9rem; line-height: 1.5; margin-bottom: 0.8rem; }
+            .options { gap: 0.45rem; }
+            .opt { padding: 0.7rem 0.9rem; font-size: 0.88rem; border-radius: 10px; gap: 0.6rem; border-width: 1.5px; }
+            .opt .letter { min-width: 26px; height: 26px; line-height: 26px; font-size: 0.8rem; }
+            .verse-reveal { margin-top: 1rem; padding: 0.9rem; }
+            .verse-reveal .vr-label { font-size: 0.72rem; margin-bottom: 0.4rem; }
+            .verse-reveal .vr-ref { font-size: 0.88rem; margin-bottom: 0.5rem; }
+            .verse-reveal .vr-arabic { font-size: 1.05rem; line-height: 2; padding: 0.7rem; }
+            .verse-reveal .vr-norsk { font-size: 0.82rem; line-height: 1.5; }
+            .next-btn { padding: 0.85rem; font-size: 0.95rem; margin-top: 0.8rem; border-radius: 10px; }
+            .results .big-score { font-size: 3rem; }
+            .results .msg { font-size: 0.95rem; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="header">
+    <div class="bismillah">بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ</div>
+    <h1>Aqidah 101 — Koranvers Quiz</h1>
+    <p>Iman Akademiet • Høst 2025</p>
+</div>
+
+<div class="container">
+    <div id="quiz">
+        <div class="top-bar">
+            <span id="counter">Spørsmål 1 / 16</span>
+            <span class="score"><span style="color:#81c784" id="cOk">0</span> riktige · <span style="color:#ef9a9a" id="cFail">0</span> gale</span>
+        </div>
+        <div class="progress-container"><div class="progress-bar" id="bar"></div></div>
+
+        <div class="card">
+            <div class="q-number" id="qNum"></div>
+            <div class="q-text" id="qText"></div>
+            <div class="options" id="opts"></div>
+            <div class="verse-reveal" id="reveal">
+                <div class="vr-label" id="revLabel"></div>
+                <div class="vr-ref" id="revRef"></div>
+                <div class="vr-arabic" id="revArabic"></div>
+                <div class="vr-norsk" id="revNorsk"></div>
+            </div>
+            <button class="next-btn" id="nextBtn" onclick="next()">Neste →</button>
+        </div>
+    </div>
+
+    <div class="results" id="results">
+        <h2>Quiz fullført!</h2>
+        <div class="big-score" id="finalPct">0%</div>
+        <div class="msg" id="finalMsg"></div>
+        <div class="stats">
+            <div class="stat"><span>Totalt</span><span id="rTotal">0</span></div>
+            <div class="stat"><span>Riktige</span><span style="color:#81c784" id="rOk">0</span></div>
+            <div class="stat"><span>Gale</span><span style="color:#ef9a9a" id="rFail">0</span></div>
+        </div>
+        <div class="review-section" id="reviewSection"></div>
+        <div class="btn-row">
+            <button class="restart-btn" onclick="start()">🔄 Prøv igjen</button>
+        </div>
+    </div>
+</div>
+
+<script>
+// ===== DATA: One entry per kjernepunkt =====
+const questions = [
+    {
+        nr: 1,
+        text: "Hva er beviset fra Koranen på at Allahs enhet (Tawhid) er grunnlaget av dawah til alle sendebudene?",
+        correct: "Koranen, 16:36",
+        correctAlt: "Koranen, 21:25",
+        ref: "Suratul Nahl, 16:36 / Suratul Anbiyaa, 21:25",
+        arabic: "وَلَقَدْ بَعَثْنَا فِي كُلِّ أُمَّةٍ رَّسُولًا أَنِ اعْبُدُوا اللَّهَ وَاجْتَنِبُوا الطَّاغُوتَ",
+        norsk: "Vi har sannelig sendt til ethvert folk et sendebud [som sa]: «Tilbe Allah og hold dere unna avguder»...",
+        arabic2: "وَمَا أَرْسَلْنَا مِن قَبْلِكَ مِن رَّسُولٍ إِلَّا نُوحِي إِلَيْهِ أَنَّهُ لَا إِلَٰهَ إِلَّا أَنَا فَاعْبُدُونِ",
+        norsk2: "Vi sendte ikke noe sendebud før deg uten at Vi åpenbarte til ham: «Det finnes ingen gud unntatt Meg, så tilbe Meg»."
+    },
+    {
+        nr: 2,
+        text: "Hva er beviset fra Koranen på at det er umulig at det finnes en annen Gud enn Allah (to Skapere)?",
+        correct: "Koranen, 23:91",
+        ref: "Suratul al-Mu'minun, 23:91",
+        arabic: "مَا اتَّخَذَ اللَّهُ مِن وَلَدٍ وَمَا كَانَ مَعَهُ مِنْ إِلَٰهٍ ۚ إِذًا لَّذَهَبَ كُلُّ إِلَٰهٍ بِمَا خَلَقَ وَلَعَلَا بَعْضُهُمْ عَلَىٰ بَعْضٍ",
+        norsk: "Allah har ikke noen som sønn, og det finnes ingen gud sammen med Ham. Hadde det vært slik, ville hver gud tatt med seg det han skapte, og de hadde søkt å overvinne hverandre."
+    },
+    {
+        nr: 3,
+        text: "Hva er beviset fra Koranen på at det er ingenting som er lik Allah?",
+        correct: "Koranen, 42:11",
+        correctAlt: "Koranen, 112:4",
+        ref: "Suratul Shura, 42:11 / Suratul Ikhlas, 112:4",
+        arabic: "لَيْسَ كَمِثْلِهِ شَيْءٌ ۖ وَهُوَ السَّمِيعُ الْبَصِيرُ",
+        norsk: "Det er ingenting lik Ham. Og Han er Den althørende, Den altseende.",
+        arabic2: "وَلَمْ يَكُن لَّهُ كُفُوًا أَحَدٌ",
+        norsk2: "Og det har aldri vært noen lik Ham."
+    },
+    {
+        nr: 4,
+        text: "Hva er beviset fra Koranen på at Allah gir forsørgelse (rizq) til alle skapninger?",
+        correct: "Koranen, 11:6",
+        ref: "Suratu Hud, 11:6",
+        arabic: "وَمَا مِن دَابَّةٍ فِي الْأَرْضِ إِلَّا عَلَى اللَّهِ رِزْقُهَا",
+        norsk: "Det finnes ikke et eneste levende vesen på jorden uten at dets forsørgelse (rizq) ligger hos Allah."
+    },
+    {
+        nr: 5,
+        text: "Hva er beviset fra Koranen på at Allah skapte mennesker og jinner for å tilbe Ham?",
+        correct: "Koranen, 51:56",
+        ref: "Suratul Dhariyat, 51:56",
+        arabic: "وَمَا خَلَقْتُ الْجِنَّ وَالْإِنسَ إِلَّا لِيَعْبُدُونِ",
+        norsk: "Og Jeg har ikke skapt jinner og mennesker unntatt for at de skal tilbe Meg."
+    },
+    {
+        nr: 6,
+        text: "Hva er beviset fra Koranen på at Allah skapte død og liv for å teste oss hvem som gjør de beste handlingene?",
+        correct: "Koranen, 67:2",
+        ref: "Suratul Mulk, 67:2",
+        arabic: "الَّذِي خَلَقَ الْمَوْتَ وَالْحَيَاةَ لِيَبْلُوَكُمْ أَيُّكُمْ أَحْسَنُ عَمَلًا",
+        norsk: "Han som skapte døden og livet for å teste dere, hvem av dere som er best i gjerninger."
+    },
+    {
+        nr: 7,
+        text: "Hva er beviset fra Koranen på at enhver skapning har en levetid (ajal) som ikke kan fremskyndes eller utsettes?",
+        correct: "Koranen, 63:11",
+        ref: "Suratul Munafiqoon, 63:11",
+        arabic: "وَلَن يُؤَخِّرَ اللَّهُ نَفْسًا إِذَا جَاءَ أَجَلُهَا",
+        norsk: "Allah vil aldri utsette en sjel når dens fastsatte tid (ajal) har kommet."
+    },
+    {
+        nr: 8,
+        text: "Hva er beviset fra Koranen på at det å gjenopplive skapelsen er lett for Allah?",
+        correct: "Koranen, 30:27",
+        ref: "Suratu Rum, 30:27",
+        arabic: "وَهُوَ الَّذِي يَبْدَأُ الْخَلْقَ ثُمَّ يُعِيدُهُ وَهُوَ أَهْوَنُ عَلَيْهِ",
+        norsk: "Det er Han som begynner skapelsen, deretter gjentar den, og dette er enda lettere for Ham."
+    },
+    {
+        nr: 9,
+        text: "Hva er beviset fra Koranen på at Allah gjør det Han vil, når Han vil?",
+        correct: "Koranen, 85:16",
+        ref: "Suratul Buruj, 85:16",
+        arabic: "فَعَّالٌ لِّمَا يُرِيدُ",
+        norsk: "Han gjør det Han vil."
+    },
+    {
+        nr: 10,
+        text: "Hva er beviset fra Koranen på at enhver skapning Allah skaper, skaper Han med en skjebne (qadar)?",
+        correct: "Koranen, 54:49",
+        ref: "Suratul Qamar, 54:49",
+        arabic: "إِنَّا كُلَّ شَيْءٍ خَلَقْنَاهُ بِقَدَرٍ",
+        norsk: "Sannelig, Vi har skapt enhver ting med en skjebne."
+    },
+    {
+        nr: 11,
+        text: "Hva er beviset fra Koranen på at menneskenes vilje er underlagt Allahs vilje?",
+        correct: "Koranen, 76:30",
+        ref: "Suratul Insan, 76:30",
+        arabic: "وَمَا تَشَاءُونَ إِلَّا أَن يَشَاءَ اللَّهُ",
+        norsk: "Dere kan ikke ville bortsett fra hvis Allah vil."
+    },
+    {
+        nr: 12,
+        text: "Hva er beviset fra Koranen på at Allah veileder den Han vil og villeder den Han vil?",
+        correct: "Koranen, 6:39",
+        ref: "Suratul An'am, 6:39",
+        arabic: "مَن يَشَإِ اللَّهُ يُضْلِلْهُ وَمَن يَشَأْ يَجْعَلْهُ عَلَىٰ صِرَاطٍ مُّسْتَقِيمٍ",
+        norsk: "Den Allah vil, villeder Ham. Og den Han vil, setter Han ham på den rette veien."
+    },
+    {
+        nr: 13,
+        text: "Hva er beviset fra Koranen på at Paradiset er en nådegave (fadl) fra Allah og gode gjerninger er årsaker til å oppnå Hans nåde?",
+        correct: "Koranen, 7:43",
+        ref: "Suratul A'raf, 7:43",
+        arabic: "وَنُودُوا أَن تِلْكُمُ الْجَنَّةُ أُورِثْتُمُوهَا بِمَا كُنتُمْ تَعْمَلُونَ",
+        norsk: "Og det vil bli ropt til dem: 'Dette er Paradiset, som dere er blitt gitt i arv for det dere pleide å gjøre'."
+    },
+    {
+        nr: 14,
+        text: "Hva er beviset fra Koranen på at Allah har skapt menneskene og deres handlinger?",
+        correct: "Koranen, 37:96",
+        ref: "Suratul Safaat, 37:96",
+        arabic: "وَاللَّهُ خَلَقَكُمْ وَمَا تَعْمَلُونَ",
+        norsk: "Allah har skapt dere og det dere gjør."
+    },
+    {
+        nr: 15,
+        text: "Hva er beviset fra Koranen på at Muhammad ﷺ er Allahs sendebud og profetenes segl?",
+        correct: "Koranen, 33:40",
+        ref: "Suratul Ahzab, 33:40",
+        arabic: "مَّا كَانَ مُحَمَّدٌ أَبَا أَحَدٍ مِّن رِّجَالِكُمْ وَلَٰكِن رَّسُولَ اللَّهِ وَخَاتَمَ النَّبِيِّينَ",
+        norsk: "Muhammad er ikke far til noen av deres menn, men Allahs sendebud og profetenes segl (khatamul nabiyeen)."
+    },
+    {
+        nr: 16,
+        text: "Hva er beviset fra Koranen på at Muhammad ﷺ ble sendt til hele menneskeheten?",
+        correct: "Koranen, 34:28",
+        ref: "Suratu Saba, 34:28",
+        arabic: "وَمَا أَرْسَلْنَاكَ إِلَّا كَافَّةً لِّلنَّاسِ بَشِيرًا وَنَذِيرًا",
+        norsk: "Og Vi har ikke sendt deg unntatt til hele menneskeheten, som en bringer av godt budskap og en advarer."
+    }
+];
+
+// All correct references for generating fake options
+const allRefs = questions.map(q => q.correct);
+const allAltRefs = questions.filter(q => q.correctAlt).map(q => q.correctAlt);
+const allOptions = [...new Set([...allRefs, ...allAltRefs])];
+
+// Extra fake references that look plausible
+const fakeRefs = [
+    "Koranen, 2:102", "Koranen, 3:91", "Koranen, 4:48", "Koranen, 5:3",
+    "Koranen, 9:31", "Koranen, 10:18", "Koranen, 12:40", "Koranen, 14:27",
+    "Koranen, 17:23", "Koranen, 18:110", "Koranen, 20:14", "Koranen, 24:35",
+    "Koranen, 28:56", "Koranen, 31:13", "Koranen, 36:82", "Koranen, 39:53",
+    "Koranen, 40:60", "Koranen, 48:29", "Koranen, 57:3", "Koranen, 59:22",
+    "Koranen, 72:18", "Koranen, 96:1", "Koranen, 99:7", "Koranen, 103:1"
+];
+
+let order = [], idx = 0, ok = 0, fail = 0, answered = false, wrongs = [];
+
+function shuffle(a) {
+    const b = [...a];
+    for (let i = b.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [b[i], b[j]] = [b[j], b[i]];
+    }
+    return b;
+}
+
+function makeFakes(correct, correctAlt) {
+    // Pick 2 fake refs that aren't the correct answer(s)
+    const exclude = new Set([correct]);
+    if (correctAlt) exclude.add(correctAlt);
+
+    const pool = [...fakeRefs, ...allRefs.filter(r => !exclude.has(r))];
+    const unique = [...new Set(pool)].filter(r => !exclude.has(r));
+    return shuffle(unique).slice(0, 2);
+}
+
+function start() {
+    order = shuffle([...Array(questions.length).keys()]);
+    idx = 0; ok = 0; fail = 0; answered = false; wrongs = [];
+    document.getElementById('results').classList.remove('show');
+    document.getElementById('quiz').classList.remove('hidden');
+    render();
+}
+
+function render() {
+    answered = false;
+    const q = questions[order[idx]];
+
+    document.getElementById('counter').textContent = `Spørsmål ${idx + 1} / ${order.length}`;
+    document.getElementById('cOk').textContent = ok;
+    document.getElementById('cFail').textContent = fail;
+    document.getElementById('bar').style.width = (idx / order.length * 100) + '%';
+
+    document.getElementById('qNum').textContent = `Spørsmål nr. ${idx + 1}`;
+    document.getElementById('qText').textContent = q.text;
+
+    // Build options: correct + 2 fakes, shuffled
+    const fakes = makeFakes(q.correct, q.correctAlt);
+    const opts = shuffle([q.correct, ...fakes]);
+
+    const letters = ['a', 'b', 'c'];
+    const box = document.getElementById('opts');
+    box.innerHTML = '';
+    opts.forEach((o, i) => {
+        const btn = document.createElement('button');
+        btn.className = 'opt';
+        btn.innerHTML = `<span class="letter">${letters[i]}</span><span>${o}</span>`;
+        btn.onclick = () => pick(btn, o, q);
+        box.appendChild(btn);
+    });
+
+    document.getElementById('reveal').className = 'verse-reveal';
+    document.getElementById('nextBtn').classList.remove('show');
+}
+
+function pick(btn, chosen, q) {
+    if (answered) return;
+    answered = true;
+
+    const isRight = chosen === q.correct || (q.correctAlt && chosen === q.correctAlt);
+    const btns = document.querySelectorAll('.opt');
+
+    btns.forEach(b => {
+        b.classList.add('disabled');
+        const txt = b.querySelector('span:last-child').textContent;
+        if (txt === q.correct || (q.correctAlt && txt === q.correctAlt)) {
+            b.classList.add('correct');
+        }
+    });
+
+    const rev = document.getElementById('reveal');
+
+    if (isRight) {
+        ok++;
+        btn.classList.add('correct');
+        rev.className = 'verse-reveal show';
+        document.getElementById('revLabel').textContent = '✅ Riktig! Her er verset:';
+    } else {
+        fail++;
+        btn.classList.add('wrong');
+        rev.className = 'verse-reveal wrong-box show';
+        document.getElementById('revLabel').textContent = '❌ Feil! Riktig svar var ' + q.correct + '. Her er verset:';
+        wrongs.push({ qText: q.text, yours: chosen, correct: q.correct, ref: q.ref });
+    }
+
+    document.getElementById('revRef').textContent = '📖 ' + q.ref;
+    document.getElementById('revArabic').textContent = q.arabic;
+
+    let norskHTML = q.norsk;
+    // If there's a second verse, show both
+    if (q.arabic2) {
+        document.getElementById('revArabic').innerHTML = q.arabic + '<br><br>' + q.arabic2;
+        norskHTML = q.norsk + '<br><br>' + q.norsk2;
+    }
+    document.getElementById('revNorsk').innerHTML = norskHTML;
+
+    document.getElementById('cOk').textContent = ok;
+    document.getElementById('cFail').textContent = fail;
+
+    const nb = document.getElementById('nextBtn');
+    nb.textContent = idx < order.length - 1 ? 'Neste →' : 'Se resultater →';
+    nb.classList.add('show');
+    setTimeout(() => nb.scrollIntoView({ behavior: 'smooth', block: 'nearest' }), 100);
+}
+
+function next() {
+    idx++;
+    if (idx >= order.length) return showResults();
+    render();
+}
+
+function showResults() {
+    document.getElementById('quiz').classList.add('hidden');
+    const r = document.getElementById('results');
+    r.classList.add('show');
+
+    const pct = Math.round(ok / order.length * 100);
+    document.getElementById('finalPct').textContent = pct + '%';
+    document.getElementById('rTotal').textContent = order.length;
+    document.getElementById('rOk').textContent = ok;
+    document.getElementById('rFail').textContent = fail;
+
+    let msg = '';
+    if (pct === 100) msg = 'Mashaa Allah! Perfekt! Du kan alle referansene! 🌟';
+    else if (pct >= 80) msg = 'Veldig bra! Fortsett å repetere de du fikk feil på 📖';
+    else if (pct >= 60) msg = 'Bra innsats! Repeter referansene litt til 💪';
+    else msg = 'Ikke gi opp! Gå gjennom referansene og prøv igjen 🤲';
+    document.getElementById('finalMsg').textContent = msg;
+
+    const sec = document.getElementById('reviewSection');
+    if (wrongs.length) {
+        let h = '<h3>📋 Referanser du bør repetere:</h3>';
+        wrongs.forEach((w, i) => {
+            h += `<div class="review-item">
+                <div class="ri-q"><strong>${i + 1}.</strong> ${w.qText}</div>
+                <div class="ri-your">❌ Ditt svar: ${w.yours}</div>
+                <div class="ri-correct">✅ Riktig: ${w.ref}</div>
+            </div>`;
+        });
+        sec.innerHTML = h;
+    } else sec.innerHTML = '';
+}
+
+// Keyboard: a/b/c or 1/2/3, Enter for next
+document.addEventListener('keydown', e => {
+    if (document.getElementById('quiz').classList.contains('hidden')) return;
+    const map = { '1':0, '2':1, '3':2, 'a':0, 'b':1, 'c':2 };
+    const i = map[e.key.toLowerCase()];
+    if (i !== undefined && !answered) {
+        const btns = document.querySelectorAll('.opt');
+        if (btns[i]) btns[i].click();
+    }
+    if (e.key === 'Enter' && answered) next();
+});
+
+start();
+</script>
+</body>
+</html>
