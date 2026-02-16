@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Aqidah 101 - Koranvers Quiz</title>
+    <title>Aqidah 101 — Studieportal</title>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Amiri&family=Inter:wght@400;500;600;700&display=swap');
         * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -20,6 +20,33 @@
         .header .bismillah { font-family: 'Amiri', serif; font-size: 1.6rem; color: #d4af37; margin-bottom: 0.5rem; direction: rtl; }
         .header h1 { font-size: 1.6rem; color: #d4af37; margin-bottom: 0.3rem; }
         .header p { color: #a0b0c0; font-size: 0.9rem; }
+
+        /* ===== TAB NAVIGATION ===== */
+        .tab-nav {
+            display: flex; justify-content: center; gap: 0;
+            background: rgba(0,0,0,0.3);
+            border-bottom: 2px solid rgba(212,175,55,0.15);
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+        .tab-btn {
+            padding: 0.9rem 1.5rem;
+            background: none; border: none;
+            color: #a0b0c0; font-size: 0.9rem; font-weight: 500;
+            cursor: pointer; font-family: 'Inter', sans-serif;
+            transition: all 0.3s; white-space: nowrap;
+            border-bottom: 3px solid transparent;
+            position: relative;
+        }
+        .tab-btn:hover { color: #d4af37; background: rgba(212,175,55,0.05); }
+        .tab-btn.active {
+            color: #d4af37; border-bottom-color: #d4af37;
+            background: rgba(212,175,55,0.08);
+        }
+        .tab-btn .tab-icon { margin-right: 0.4rem; }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+
         .container { max-width: 750px; margin: 0 auto; padding: 1.5rem; }
 
         .top-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; color: #a0b0c0; font-size: 0.9rem; }
@@ -39,7 +66,7 @@
             padding: 1rem 1.2rem; border: 2px solid rgba(255,255,255,0.1);
             background: rgba(255,255,255,0.03); border-radius: 12px; color: #e0e0e0;
             font-size: 1rem; cursor: pointer; transition: all 0.25s; text-align: left;
-            font-family: 'Inter', sans-serif; display: flex; align-items: center; gap: 0.8rem;
+            font-family: 'Inter', sans-serif; display: flex; align-items: flex-start; gap: 0.8rem;
         }
         .opt:hover:not(.disabled) { border-color: rgba(212,175,55,0.5); background: rgba(212,175,55,0.08); }
         .opt .letter {
@@ -47,6 +74,7 @@
             border-radius: 50%; background: rgba(212,175,55,0.15);
             color: #d4af37; font-weight: 600; font-size: 0.9rem; flex-shrink: 0;
         }
+        .opt .opt-text { padding-top: 3px; }
         .opt.correct { border-color: #4caf50; background: rgba(76,175,80,0.15); color: #a5d6a7; }
         .opt.correct .letter { background: rgba(76,175,80,0.3); color: #a5d6a7; }
         .opt.wrong { border-color: #f44336; background: rgba(244,67,54,0.12); color: #ef9a9a; }
@@ -54,7 +82,6 @@
         .opt.disabled { cursor: default; opacity: 0.5; }
         .opt.disabled.correct { opacity: 1; }
 
-        /* Verse reveal box */
         .verse-reveal {
             margin-top: 1.5rem; padding: 1.2rem; border-radius: 12px; display: none;
             background: rgba(76,175,80,0.06); border: 1px solid rgba(76,175,80,0.2);
@@ -75,6 +102,17 @@
             padding-left: 0.8rem; border-left: 3px solid rgba(212,175,55,0.3);
         }
 
+        /* Explanation reveal */
+        .explain-reveal {
+            margin-top: 1.5rem; padding: 1.2rem; border-radius: 12px; display: none;
+            background: rgba(76,175,80,0.06); border: 1px solid rgba(76,175,80,0.2);
+        }
+        .explain-reveal.show { display: block; animation: fadeIn 0.4s ease; }
+        .explain-reveal.wrong-box { background: rgba(244,67,54,0.06); border-color: rgba(244,67,54,0.2); }
+        .explain-reveal .er-label { font-size: 0.8rem; color: #81c784; margin-bottom: 0.6rem; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; }
+        .explain-reveal.wrong-box .er-label { color: #ef9a9a; }
+        .explain-reveal .er-text { font-size: 0.95rem; color: #b0c0d0; line-height: 1.7; }
+
         @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
 
         .next-btn {
@@ -87,7 +125,6 @@
         .next-btn:hover { background: linear-gradient(135deg, #e0c050, #d4af37); }
         .next-btn.show { display: block; }
 
-        /* Results */
         .results { text-align: center; padding: 2rem 0; display: none; }
         .results.show { display: block; }
         .results h2 { color: #d4af37; margin-bottom: 0.5rem; }
@@ -116,11 +153,13 @@
         }
         .restart-btn:hover { background: linear-gradient(135deg, #e0c050, #d4af37); }
         .hidden { display: none !important; }
+
         @media (max-width: 600px) {
             .header { padding: 0.7rem 0.8rem; }
             .header .bismillah { font-size: 1.1rem; margin-bottom: 0.2rem; }
             .header h1 { font-size: 1rem; margin-bottom: 0.1rem; }
             .header p { font-size: 0.75rem; }
+            .tab-btn { padding: 0.7rem 0.9rem; font-size: 0.78rem; }
             .container { padding: 0.7rem; }
             .top-bar { font-size: 0.78rem; margin-bottom: 0.5rem; }
             .progress-container { height: 5px; margin-bottom: 0.7rem; }
@@ -135,6 +174,7 @@
             .verse-reveal .vr-ref { font-size: 0.88rem; margin-bottom: 0.5rem; }
             .verse-reveal .vr-arabic { font-size: 1.05rem; line-height: 2; padding: 0.7rem; }
             .verse-reveal .vr-norsk { font-size: 0.82rem; line-height: 1.5; }
+            .explain-reveal { margin-top: 1rem; padding: 0.9rem; }
             .next-btn { padding: 0.85rem; font-size: 0.95rem; margin-top: 0.8rem; border-radius: 10px; }
             .results .big-score { font-size: 3rem; }
             .results .msg { font-size: 0.95rem; }
@@ -145,204 +185,147 @@
 
 <div class="header">
     <div class="bismillah">بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ</div>
-    <h1>Aqidah 101 — Koranvers Quiz</h1>
+    <h1>Aqidah 101 — Studieportal</h1>
     <p>Iman Akademiet • Høst 2025</p>
 </div>
 
+<!-- ===== TAB NAVIGATION ===== -->
+<div class="tab-nav">
+    <button class="tab-btn active" onclick="switchTab('koranvers')">
+        <span class="tab-icon">📖</span> Koranvers Quiz
+    </button>
+    <button class="tab-btn" onclick="switchTab('eksamen')">
+        <span class="tab-icon">📝</span> Prøveeksamen
+    </button>
+    <button class="tab-btn" onclick="switchTab('oppsummering')">
+        <span class="tab-icon">🎓</span> Oppsummering Quiz
+    </button>
+</div>
+
+<!-- ================= TAB 1: KORANVERS QUIZ ================= -->
+<div class="tab-content active" id="tab-koranvers">
 <div class="container">
-    <div id="quiz">
+    <div id="quiz1">
         <div class="top-bar">
-            <span id="counter">Spørsmål 1 / 16</span>
-            <span class="score"><span style="color:#81c784" id="cOk">0</span> riktige · <span style="color:#ef9a9a" id="cFail">0</span> gale</span>
+            <span id="counter1">Spørsmål 1 / 16</span>
+            <span class="score"><span style="color:#81c784" id="cOk1">0</span> riktige · <span style="color:#ef9a9a" id="cFail1">0</span> gale</span>
         </div>
-        <div class="progress-container"><div class="progress-bar" id="bar"></div></div>
-
+        <div class="progress-container"><div class="progress-bar" id="bar1"></div></div>
         <div class="card">
-            <div class="q-number" id="qNum"></div>
-            <div class="q-text" id="qText"></div>
-            <div class="options" id="opts"></div>
-            <div class="verse-reveal" id="reveal">
-                <div class="vr-label" id="revLabel"></div>
-                <div class="vr-ref" id="revRef"></div>
-                <div class="vr-arabic" id="revArabic"></div>
-                <div class="vr-norsk" id="revNorsk"></div>
+            <div class="q-number" id="qNum1"></div>
+            <div class="q-text" id="qText1"></div>
+            <div class="options" id="opts1"></div>
+            <div class="verse-reveal" id="reveal1">
+                <div class="vr-label" id="revLabel1"></div>
+                <div class="vr-ref" id="revRef1"></div>
+                <div class="vr-arabic" id="revArabic1"></div>
+                <div class="vr-norsk" id="revNorsk1"></div>
             </div>
-            <button class="next-btn" id="nextBtn" onclick="next()">Neste →</button>
+            <button class="next-btn" id="nextBtn1" onclick="q1Next()">Neste →</button>
         </div>
     </div>
-
-    <div class="results" id="results">
+    <div class="results" id="results1">
         <h2>Quiz fullført!</h2>
-        <div class="big-score" id="finalPct">0%</div>
-        <div class="msg" id="finalMsg"></div>
+        <div class="big-score" id="finalPct1">0%</div>
+        <div class="msg" id="finalMsg1"></div>
         <div class="stats">
-            <div class="stat"><span>Totalt</span><span id="rTotal">0</span></div>
-            <div class="stat"><span>Riktige</span><span style="color:#81c784" id="rOk">0</span></div>
-            <div class="stat"><span>Gale</span><span style="color:#ef9a9a" id="rFail">0</span></div>
+            <div class="stat"><span>Totalt</span><span id="rTotal1">0</span></div>
+            <div class="stat"><span>Riktige</span><span style="color:#81c784" id="rOk1">0</span></div>
+            <div class="stat"><span>Gale</span><span style="color:#ef9a9a" id="rFail1">0</span></div>
         </div>
-        <div class="review-section" id="reviewSection"></div>
-        <div class="btn-row">
-            <button class="restart-btn" onclick="start()">🔄 Prøv igjen</button>
+        <div class="review-section" id="reviewSection1"></div>
+        <div class="btn-row"><button class="restart-btn" onclick="q1Start()">🔄 Prøv igjen</button></div>
+    </div>
+</div>
+</div>
+
+<!-- ================= TAB 2: PRØVEEKSAMEN ================= -->
+<div class="tab-content" id="tab-eksamen">
+<div class="container">
+    <div id="quiz2">
+        <div class="top-bar">
+            <span id="counter2">Spørsmål 1 / 30</span>
+            <span class="score"><span style="color:#81c784" id="cOk2">0</span> riktige · <span style="color:#ef9a9a" id="cFail2">0</span> gale</span>
+        </div>
+        <div class="progress-container"><div class="progress-bar" id="bar2"></div></div>
+        <div class="card">
+            <div class="q-number" id="qNum2"></div>
+            <div class="q-text" id="qText2"></div>
+            <div class="options" id="opts2"></div>
+            <div class="explain-reveal" id="reveal2">
+                <div class="er-label" id="revLabel2"></div>
+                <div class="er-text" id="revText2"></div>
+            </div>
+            <button class="next-btn" id="nextBtn2" onclick="q2Next()">Neste →</button>
         </div>
     </div>
+    <div class="results" id="results2">
+        <h2>Prøveeksamen fullført!</h2>
+        <div class="big-score" id="finalPct2">0%</div>
+        <div class="msg" id="finalMsg2"></div>
+        <div class="stats">
+            <div class="stat"><span>Totalt</span><span id="rTotal2">0</span></div>
+            <div class="stat"><span>Riktige</span><span style="color:#81c784" id="rOk2">0</span></div>
+            <div class="stat"><span>Gale</span><span style="color:#ef9a9a" id="rFail2">0</span></div>
+            <div class="stat"><span>Poengsum</span><span style="color:#d4af37" id="rPoints2">0 / 60</span></div>
+        </div>
+        <div class="review-section" id="reviewSection2"></div>
+        <div class="btn-row"><button class="restart-btn" onclick="q2Start()">🔄 Prøv igjen</button></div>
+    </div>
+</div>
+</div>
+
+<!-- ================= TAB 3: OPPSUMMERING QUIZ ================= -->
+<div class="tab-content" id="tab-oppsummering">
+<div class="container">
+    <div id="quiz3">
+        <div class="top-bar">
+            <span id="counter3">Spørsmål 1 / 68</span>
+            <span class="score"><span style="color:#81c784" id="cOk3">0</span> riktige · <span style="color:#ef9a9a" id="cFail3">0</span> gale</span>
+        </div>
+        <div class="progress-container"><div class="progress-bar" id="bar3"></div></div>
+        <div class="card">
+            <div class="q-number" id="qNum3"></div>
+            <div class="q-text" id="qText3"></div>
+            <div class="options" id="opts3"></div>
+            <div class="explain-reveal" id="reveal3">
+                <div class="er-label" id="revLabel3"></div>
+                <div class="er-text" id="revText3"></div>
+            </div>
+            <button class="next-btn" id="nextBtn3" onclick="q3Next()">Neste →</button>
+        </div>
+    </div>
+    <div class="results" id="results3">
+        <h2>Oppsummering Quiz fullført!</h2>
+        <div class="big-score" id="finalPct3">0%</div>
+        <div class="msg" id="finalMsg3"></div>
+        <div class="stats">
+            <div class="stat"><span>Totalt</span><span id="rTotal3">0</span></div>
+            <div class="stat"><span>Riktige</span><span style="color:#81c784" id="rOk3">0</span></div>
+            <div class="stat"><span>Gale</span><span style="color:#ef9a9a" id="rFail3">0</span></div>
+        </div>
+        <div class="review-section" id="reviewSection3"></div>
+        <div class="btn-row"><button class="restart-btn" onclick="q3Start()">🔄 Prøv igjen</button></div>
+    </div>
+</div>
 </div>
 
 <script>
-// ===== DATA: One entry per kjernepunkt =====
-const questions = [
-    {
-        nr: 1,
-        text: "Hva er beviset fra Koranen på at Allahs enhet (Tawhid) er grunnlaget av dawah til alle sendebudene?",
-        correct: "Koranen, 16:36",
-        correctAlt: "Koranen, 21:25",
-        ref: "Suratul Nahl, 16:36 / Suratul Anbiyaa, 21:25",
-        arabic: "وَلَقَدْ بَعَثْنَا فِي كُلِّ أُمَّةٍ رَّسُولًا أَنِ اعْبُدُوا اللَّهَ وَاجْتَنِبُوا الطَّاغُوتَ",
-        norsk: "Vi har sannelig sendt til ethvert folk et sendebud [som sa]: «Tilbe Allah og hold dere unna avguder»...",
-        arabic2: "وَمَا أَرْسَلْنَا مِن قَبْلِكَ مِن رَّسُولٍ إِلَّا نُوحِي إِلَيْهِ أَنَّهُ لَا إِلَٰهَ إِلَّا أَنَا فَاعْبُدُونِ",
-        norsk2: "Vi sendte ikke noe sendebud før deg uten at Vi åpenbarte til ham: «Det finnes ingen gud unntatt Meg, så tilbe Meg»."
-    },
-    {
-        nr: 2,
-        text: "Hva er beviset fra Koranen på at det er umulig at det finnes en annen Gud enn Allah (to Skapere)?",
-        correct: "Koranen, 23:91",
-        ref: "Suratul al-Mu'minun, 23:91",
-        arabic: "مَا اتَّخَذَ اللَّهُ مِن وَلَدٍ وَمَا كَانَ مَعَهُ مِنْ إِلَٰهٍ ۚ إِذًا لَّذَهَبَ كُلُّ إِلَٰهٍ بِمَا خَلَقَ وَلَعَلَا بَعْضُهُمْ عَلَىٰ بَعْضٍ",
-        norsk: "Allah har ikke noen som sønn, og det finnes ingen gud sammen med Ham. Hadde det vært slik, ville hver gud tatt med seg det han skapte, og de hadde søkt å overvinne hverandre."
-    },
-    {
-        nr: 3,
-        text: "Hva er beviset fra Koranen på at det er ingenting som er lik Allah?",
-        correct: "Koranen, 42:11",
-        correctAlt: "Koranen, 112:4",
-        ref: "Suratul Shura, 42:11 / Suratul Ikhlas, 112:4",
-        arabic: "لَيْسَ كَمِثْلِهِ شَيْءٌ ۖ وَهُوَ السَّمِيعُ الْبَصِيرُ",
-        norsk: "Det er ingenting lik Ham. Og Han er Den althørende, Den altseende.",
-        arabic2: "وَلَمْ يَكُن لَّهُ كُفُوًا أَحَدٌ",
-        norsk2: "Og det har aldri vært noen lik Ham."
-    },
-    {
-        nr: 4,
-        text: "Hva er beviset fra Koranen på at Allah gir forsørgelse (rizq) til alle skapninger?",
-        correct: "Koranen, 11:6",
-        ref: "Suratu Hud, 11:6",
-        arabic: "وَمَا مِن دَابَّةٍ فِي الْأَرْضِ إِلَّا عَلَى اللَّهِ رِزْقُهَا",
-        norsk: "Det finnes ikke et eneste levende vesen på jorden uten at dets forsørgelse (rizq) ligger hos Allah."
-    },
-    {
-        nr: 5,
-        text: "Hva er beviset fra Koranen på at Allah skapte mennesker og jinner for å tilbe Ham?",
-        correct: "Koranen, 51:56",
-        ref: "Suratul Dhariyat, 51:56",
-        arabic: "وَمَا خَلَقْتُ الْجِنَّ وَالْإِنسَ إِلَّا لِيَعْبُدُونِ",
-        norsk: "Og Jeg har ikke skapt jinner og mennesker unntatt for at de skal tilbe Meg."
-    },
-    {
-        nr: 6,
-        text: "Hva er beviset fra Koranen på at Allah skapte død og liv for å teste oss hvem som gjør de beste handlingene?",
-        correct: "Koranen, 67:2",
-        ref: "Suratul Mulk, 67:2",
-        arabic: "الَّذِي خَلَقَ الْمَوْتَ وَالْحَيَاةَ لِيَبْلُوَكُمْ أَيُّكُمْ أَحْسَنُ عَمَلًا",
-        norsk: "Han som skapte døden og livet for å teste dere, hvem av dere som er best i gjerninger."
-    },
-    {
-        nr: 7,
-        text: "Hva er beviset fra Koranen på at enhver skapning har en levetid (ajal) som ikke kan fremskyndes eller utsettes?",
-        correct: "Koranen, 63:11",
-        ref: "Suratul Munafiqoon, 63:11",
-        arabic: "وَلَن يُؤَخِّرَ اللَّهُ نَفْسًا إِذَا جَاءَ أَجَلُهَا",
-        norsk: "Allah vil aldri utsette en sjel når dens fastsatte tid (ajal) har kommet."
-    },
-    {
-        nr: 8,
-        text: "Hva er beviset fra Koranen på at det å gjenopplive skapelsen er lett for Allah?",
-        correct: "Koranen, 30:27",
-        ref: "Suratu Rum, 30:27",
-        arabic: "وَهُوَ الَّذِي يَبْدَأُ الْخَلْقَ ثُمَّ يُعِيدُهُ وَهُوَ أَهْوَنُ عَلَيْهِ",
-        norsk: "Det er Han som begynner skapelsen, deretter gjentar den, og dette er enda lettere for Ham."
-    },
-    {
-        nr: 9,
-        text: "Hva er beviset fra Koranen på at Allah gjør det Han vil, når Han vil?",
-        correct: "Koranen, 85:16",
-        ref: "Suratul Buruj, 85:16",
-        arabic: "فَعَّالٌ لِّمَا يُرِيدُ",
-        norsk: "Han gjør det Han vil."
-    },
-    {
-        nr: 10,
-        text: "Hva er beviset fra Koranen på at enhver skapning Allah skaper, skaper Han med en skjebne (qadar)?",
-        correct: "Koranen, 54:49",
-        ref: "Suratul Qamar, 54:49",
-        arabic: "إِنَّا كُلَّ شَيْءٍ خَلَقْنَاهُ بِقَدَرٍ",
-        norsk: "Sannelig, Vi har skapt enhver ting med en skjebne."
-    },
-    {
-        nr: 11,
-        text: "Hva er beviset fra Koranen på at menneskenes vilje er underlagt Allahs vilje?",
-        correct: "Koranen, 76:30",
-        ref: "Suratul Insan, 76:30",
-        arabic: "وَمَا تَشَاءُونَ إِلَّا أَن يَشَاءَ اللَّهُ",
-        norsk: "Dere kan ikke ville bortsett fra hvis Allah vil."
-    },
-    {
-        nr: 12,
-        text: "Hva er beviset fra Koranen på at Allah veileder den Han vil og villeder den Han vil?",
-        correct: "Koranen, 6:39",
-        ref: "Suratul An'am, 6:39",
-        arabic: "مَن يَشَإِ اللَّهُ يُضْلِلْهُ وَمَن يَشَأْ يَجْعَلْهُ عَلَىٰ صِرَاطٍ مُّسْتَقِيمٍ",
-        norsk: "Den Allah vil, villeder Ham. Og den Han vil, setter Han ham på den rette veien."
-    },
-    {
-        nr: 13,
-        text: "Hva er beviset fra Koranen på at Paradiset er en nådegave (fadl) fra Allah og gode gjerninger er årsaker til å oppnå Hans nåde?",
-        correct: "Koranen, 7:43",
-        ref: "Suratul A'raf, 7:43",
-        arabic: "وَنُودُوا أَن تِلْكُمُ الْجَنَّةُ أُورِثْتُمُوهَا بِمَا كُنتُمْ تَعْمَلُونَ",
-        norsk: "Og det vil bli ropt til dem: 'Dette er Paradiset, som dere er blitt gitt i arv for det dere pleide å gjøre'."
-    },
-    {
-        nr: 14,
-        text: "Hva er beviset fra Koranen på at Allah har skapt menneskene og deres handlinger?",
-        correct: "Koranen, 37:96",
-        ref: "Suratul Safaat, 37:96",
-        arabic: "وَاللَّهُ خَلَقَكُمْ وَمَا تَعْمَلُونَ",
-        norsk: "Allah har skapt dere og det dere gjør."
-    },
-    {
-        nr: 15,
-        text: "Hva er beviset fra Koranen på at Muhammad ﷺ er Allahs sendebud og profetenes segl?",
-        correct: "Koranen, 33:40",
-        ref: "Suratul Ahzab, 33:40",
-        arabic: "مَّا كَانَ مُحَمَّدٌ أَبَا أَحَدٍ مِّن رِّجَالِكُمْ وَلَٰكِن رَّسُولَ اللَّهِ وَخَاتَمَ النَّبِيِّينَ",
-        norsk: "Muhammad er ikke far til noen av deres menn, men Allahs sendebud og profetenes segl (khatamul nabiyeen)."
-    },
-    {
-        nr: 16,
-        text: "Hva er beviset fra Koranen på at Muhammad ﷺ ble sendt til hele menneskeheten?",
-        correct: "Koranen, 34:28",
-        ref: "Suratu Saba, 34:28",
-        arabic: "وَمَا أَرْسَلْنَاكَ إِلَّا كَافَّةً لِّلنَّاسِ بَشِيرًا وَنَذِيرًا",
-        norsk: "Og Vi har ikke sendt deg unntatt til hele menneskeheten, som en bringer av godt budskap og en advarer."
-    }
-];
+/* ============================================================
+   TAB SWITCHING
+   ============================================================ */
+function switchTab(id) {
+    document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.getElementById('tab-' + id).classList.add('active');
+    const btns = document.querySelectorAll('.tab-btn');
+    const map = { koranvers: 0, eksamen: 1, oppsummering: 2 };
+    btns[map[id]].classList.add('active');
+}
 
-// All correct references for generating fake options
-const allRefs = questions.map(q => q.correct);
-const allAltRefs = questions.filter(q => q.correctAlt).map(q => q.correctAlt);
-const allOptions = [...new Set([...allRefs, ...allAltRefs])];
-
-// Extra fake references that look plausible
-const fakeRefs = [
-    "Koranen, 2:102", "Koranen, 3:91", "Koranen, 4:48", "Koranen, 5:3",
-    "Koranen, 9:31", "Koranen, 10:18", "Koranen, 12:40", "Koranen, 14:27",
-    "Koranen, 17:23", "Koranen, 18:110", "Koranen, 20:14", "Koranen, 24:35",
-    "Koranen, 28:56", "Koranen, 31:13", "Koranen, 36:82", "Koranen, 39:53",
-    "Koranen, 40:60", "Koranen, 48:29", "Koranen, 57:3", "Koranen, 59:22",
-    "Koranen, 72:18", "Koranen, 96:1", "Koranen, 99:7", "Koranen, 103:1"
-];
-
-let order = [], idx = 0, ok = 0, fail = 0, answered = false, wrongs = [];
-
+/* ============================================================
+   SHARED HELPERS
+   ============================================================ */
 function shuffle(a) {
     const b = [...a];
     for (let i = b.length - 1; i > 0; i--) {
@@ -352,156 +335,460 @@ function shuffle(a) {
     return b;
 }
 
-function makeFakes(correct, correctAlt) {
-    // Pick 2 fake refs that aren't the correct answer(s)
-    const exclude = new Set([correct]);
-    if (correctAlt) exclude.add(correctAlt);
-
-    const pool = [...fakeRefs, ...allRefs.filter(r => !exclude.has(r))];
-    const unique = [...new Set(pool)].filter(r => !exclude.has(r));
-    return shuffle(unique).slice(0, 2);
+function getMsg(pct) {
+    if (pct === 100) return 'Mashaa Allah! Perfekt! 🌟';
+    if (pct >= 80)  return 'Veldig bra! Fortsett å repetere de du fikk feil på 📖';
+    if (pct >= 60)  return 'Bra innsats! Repeter litt til 💪';
+    return 'Ikke gi opp! Gå gjennom stoffet og prøv igjen 🤲';
 }
 
-function start() {
-    order = shuffle([...Array(questions.length).keys()]);
-    idx = 0; ok = 0; fail = 0; answered = false; wrongs = [];
-    document.getElementById('results').classList.remove('show');
-    document.getElementById('quiz').classList.remove('hidden');
-    render();
+/* ============================================================
+   TAB 1: KORANVERS QUIZ
+   ============================================================ */
+const q1Data = [
+    { nr:1, text:"Hva er beviset fra Koranen på at Allahs enhet (Tawhid) er grunnlaget av dawah til alle sendebudene?", correct:"Koranen, 16:36", correctAlt:"Koranen, 21:25", ref:"Suratul Nahl, 16:36 / Suratul Anbiyaa, 21:25", arabic:"وَلَقَدْ بَعَثْنَا فِي كُلِّ أُمَّةٍ رَّسُولًا أَنِ اعْبُدُوا اللَّهَ وَاجْتَنِبُوا الطَّاغُوتَ", norsk:"Vi har sannelig sendt til ethvert folk et sendebud [som sa]: «Tilbe Allah og hold dere unna avguder»...", arabic2:"وَمَا أَرْسَلْنَا مِن قَبْلِكَ مِن رَّسُولٍ إِلَّا نُوحِي إِلَيْهِ أَنَّهُ لَا إِلَٰهَ إِلَّا أَنَا فَاعْبُدُونِ", norsk2:"Vi sendte ikke noe sendebud før deg uten at Vi åpenbarte til ham: «Det finnes ingen gud unntatt Meg, så tilbe Meg»." },
+    { nr:2, text:"Hva er beviset fra Koranen på at det er umulig at det finnes en annen Gud enn Allah (to Skapere)?", correct:"Koranen, 23:91", ref:"Suratul al-Mu'minun, 23:91", arabic:"مَا اتَّخَذَ اللَّهُ مِن وَلَدٍ وَمَا كَانَ مَعَهُ مِنْ إِلَٰهٍ ۚ إِذًا لَّذَهَبَ كُلُّ إِلَٰهٍ بِمَا خَلَقَ وَلَعَلَا بَعْضُهُمْ عَلَىٰ بَعْضٍ", norsk:"Allah har ikke noen som sønn, og det finnes ingen gud sammen med Ham. Hadde det vært slik, ville hver gud tatt med seg det han skapte, og de hadde søkt å overvinne hverandre." },
+    { nr:3, text:"Hva er beviset fra Koranen på at det er ingenting som er lik Allah?", correct:"Koranen, 42:11", correctAlt:"Koranen, 112:4", ref:"Suratul Shura, 42:11 / Suratul Ikhlas, 112:4", arabic:"لَيْسَ كَمِثْلِهِ شَيْءٌ ۖ وَهُوَ السَّمِيعُ الْبَصِيرُ", norsk:"Det er ingenting lik Ham. Og Han er Den althørende, Den altseende.", arabic2:"وَلَمْ يَكُن لَّهُ كُفُوًا أَحَدٌ", norsk2:"Og det har aldri vært noen lik Ham." },
+    { nr:4, text:"Hva er beviset fra Koranen på at Allah gir forsørgelse (rizq) til alle skapninger?", correct:"Koranen, 11:6", ref:"Suratu Hud, 11:6", arabic:"وَمَا مِن دَابَّةٍ فِي الْأَرْضِ إِلَّا عَلَى اللَّهِ رِزْقُهَا", norsk:"Det finnes ikke et eneste levende vesen på jorden uten at dets forsørgelse (rizq) ligger hos Allah." },
+    { nr:5, text:"Hva er beviset fra Koranen på at Allah skapte mennesker og jinner for å tilbe Ham?", correct:"Koranen, 51:56", ref:"Suratul Dhariyat, 51:56", arabic:"وَمَا خَلَقْتُ الْجِنَّ وَالْإِنسَ إِلَّا لِيَعْبُدُونِ", norsk:"Og Jeg har ikke skapt jinner og mennesker unntatt for at de skal tilbe Meg." },
+    { nr:6, text:"Hva er beviset fra Koranen på at Allah skapte død og liv for å teste oss hvem som gjør de beste handlingene?", correct:"Koranen, 67:2", ref:"Suratul Mulk, 67:2", arabic:"الَّذِي خَلَقَ الْمَوْتَ وَالْحَيَاةَ لِيَبْلُوَكُمْ أَيُّكُمْ أَحْسَنُ عَمَلًا", norsk:"Han som skapte døden og livet for å teste dere, hvem av dere som er best i gjerninger." },
+    { nr:7, text:"Hva er beviset fra Koranen på at enhver skapning har en levetid (ajal) som ikke kan fremskyndes eller utsettes?", correct:"Koranen, 63:11", ref:"Suratul Munafiqoon, 63:11", arabic:"وَلَن يُؤَخِّرَ اللَّهُ نَفْسًا إِذَا جَاءَ أَجَلُهَا", norsk:"Allah vil aldri utsette en sjel når dens fastsatte tid (ajal) har kommet." },
+    { nr:8, text:"Hva er beviset fra Koranen på at det å gjenopplive skapelsen er lett for Allah?", correct:"Koranen, 30:27", ref:"Suratu Rum, 30:27", arabic:"وَهُوَ الَّذِي يَبْدَأُ الْخَلْقَ ثُمَّ يُعِيدُهُ وَهُوَ أَهْوَنُ عَلَيْهِ", norsk:"Det er Han som begynner skapelsen, deretter gjentar den, og dette er enda lettere for Ham." },
+    { nr:9, text:"Hva er beviset fra Koranen på at Allah gjør det Han vil, når Han vil?", correct:"Koranen, 85:16", ref:"Suratul Buruj, 85:16", arabic:"فَعَّالٌ لِّمَا يُرِيدُ", norsk:"Han gjør det Han vil." },
+    { nr:10, text:"Hva er beviset fra Koranen på at enhver skapning Allah skaper, skaper Han med en skjebne (qadar)?", correct:"Koranen, 54:49", ref:"Suratul Qamar, 54:49", arabic:"إِنَّا كُلَّ شَيْءٍ خَلَقْنَاهُ بِقَدَرٍ", norsk:"Sannelig, Vi har skapt enhver ting med en skjebne." },
+    { nr:11, text:"Hva er beviset fra Koranen på at menneskenes vilje er underlagt Allahs vilje?", correct:"Koranen, 76:30", ref:"Suratul Insan, 76:30", arabic:"وَمَا تَشَاءُونَ إِلَّا أَن يَشَاءَ اللَّهُ", norsk:"Dere kan ikke ville bortsett fra hvis Allah vil." },
+    { nr:12, text:"Hva er beviset fra Koranen på at Allah veileder den Han vil og villeder den Han vil?", correct:"Koranen, 6:39", ref:"Suratul An'am, 6:39", arabic:"مَن يَشَإِ اللَّهُ يُضْلِلْهُ وَمَن يَشَأْ يَجْعَلْهُ عَلَىٰ صِرَاطٍ مُّسْتَقِيمٍ", norsk:"Den Allah vil, villeder Ham. Og den Han vil, setter Han ham på den rette veien." },
+    { nr:13, text:"Hva er beviset fra Koranen på at Paradiset er en nådegave (fadl) fra Allah og gode gjerninger er årsaker til å oppnå Hans nåde?", correct:"Koranen, 7:43", ref:"Suratul A'raf, 7:43", arabic:"وَنُودُوا أَن تِلْكُمُ الْجَنَّةُ أُورِثْتُمُوهَا بِمَا كُنتُمْ تَعْمَلُونَ", norsk:"Og det vil bli ropt til dem: 'Dette er Paradiset, som dere er blitt gitt i arv for det dere pleide å gjøre'." },
+    { nr:14, text:"Hva er beviset fra Koranen på at Allah har skapt menneskene og deres handlinger?", correct:"Koranen, 37:96", ref:"Suratul Safaat, 37:96", arabic:"وَاللَّهُ خَلَقَكُمْ وَمَا تَعْمَلُونَ", norsk:"Allah har skapt dere og det dere gjør." },
+    { nr:15, text:"Hva er beviset fra Koranen på at Muhammad ﷺ er Allahs sendebud og profetenes segl?", correct:"Koranen, 33:40", ref:"Suratul Ahzab, 33:40", arabic:"مَّا كَانَ مُحَمَّدٌ أَبَا أَحَدٍ مِّن رِّجَالِكُمْ وَلَٰكِن رَّسُولَ اللَّهِ وَخَاتَمَ النَّبِيِّينَ", norsk:"Muhammad er ikke far til noen av deres menn, men Allahs sendebud og profetenes segl (khatamul nabiyeen)." },
+    { nr:16, text:"Hva er beviset fra Koranen på at Muhammad ﷺ ble sendt til hele menneskeheten?", correct:"Koranen, 34:28", ref:"Suratu Saba, 34:28", arabic:"وَمَا أَرْسَلْنَاكَ إِلَّا كَافَّةً لِّلنَّاسِ بَشِيرًا وَنَذِيرًا", norsk:"Og Vi har ikke sendt deg unntatt til hele menneskeheten, som en bringer av godt budskap og en advarer." }
+];
+
+const allRefs = q1Data.map(q => q.correct);
+const allAltRefs = q1Data.filter(q => q.correctAlt).map(q => q.correctAlt);
+const fakeRefs = [
+    "Koranen, 2:102","Koranen, 3:91","Koranen, 4:48","Koranen, 5:3",
+    "Koranen, 9:31","Koranen, 10:18","Koranen, 12:40","Koranen, 14:27",
+    "Koranen, 17:23","Koranen, 18:110","Koranen, 20:14","Koranen, 24:35",
+    "Koranen, 28:56","Koranen, 31:13","Koranen, 36:82","Koranen, 39:53",
+    "Koranen, 40:60","Koranen, 48:29","Koranen, 57:3","Koranen, 59:22",
+    "Koranen, 72:18","Koranen, 96:1","Koranen, 99:7","Koranen, 103:1"
+];
+
+let q1 = { order:[], idx:0, ok:0, fail:0, answered:false, wrongs:[] };
+
+function q1MakeFakes(correct, correctAlt) {
+    const ex = new Set([correct]); if (correctAlt) ex.add(correctAlt);
+    const pool = [...fakeRefs, ...allRefs.filter(r=>!ex.has(r))];
+    return shuffle([...new Set(pool)].filter(r=>!ex.has(r))).slice(0,2);
 }
 
-function render() {
-    answered = false;
-    const q = questions[order[idx]];
+function q1Start() {
+    q1 = { order: shuffle([...Array(q1Data.length).keys()]), idx:0, ok:0, fail:0, answered:false, wrongs:[] };
+    document.getElementById('results1').classList.remove('show');
+    document.getElementById('quiz1').classList.remove('hidden');
+    q1Render();
+}
 
-    document.getElementById('counter').textContent = `Spørsmål ${idx + 1} / ${order.length}`;
-    document.getElementById('cOk').textContent = ok;
-    document.getElementById('cFail').textContent = fail;
-    document.getElementById('bar').style.width = (idx / order.length * 100) + '%';
-
-    document.getElementById('qNum').textContent = `Spørsmål nr. ${idx + 1}`;
-    document.getElementById('qText').textContent = q.text;
-
-    // Build options: correct + 2 fakes, shuffled
-    const fakes = makeFakes(q.correct, q.correctAlt);
+function q1Render() {
+    q1.answered = false;
+    const q = q1Data[q1.order[q1.idx]];
+    document.getElementById('counter1').textContent = `Spørsmål ${q1.idx+1} / ${q1.order.length}`;
+    document.getElementById('cOk1').textContent = q1.ok;
+    document.getElementById('cFail1').textContent = q1.fail;
+    document.getElementById('bar1').style.width = (q1.idx / q1.order.length * 100) + '%';
+    document.getElementById('qNum1').textContent = `Spørsmål nr. ${q1.idx+1}`;
+    document.getElementById('qText1').textContent = q.text;
+    const fakes = q1MakeFakes(q.correct, q.correctAlt);
     const opts = shuffle([q.correct, ...fakes]);
-
-    const letters = ['a', 'b', 'c'];
-    const box = document.getElementById('opts');
+    const letters = ['a','b','c'];
+    const box = document.getElementById('opts1');
     box.innerHTML = '';
-    opts.forEach((o, i) => {
+    opts.forEach((o,i) => {
         const btn = document.createElement('button');
         btn.className = 'opt';
-        btn.innerHTML = `<span class="letter">${letters[i]}</span><span>${o}</span>`;
-        btn.onclick = () => pick(btn, o, q);
+        btn.innerHTML = `<span class="letter">${letters[i]}</span><span class="opt-text">${o}</span>`;
+        btn.onclick = () => q1Pick(btn, o, q);
         box.appendChild(btn);
     });
-
-    document.getElementById('reveal').className = 'verse-reveal';
-    document.getElementById('nextBtn').classList.remove('show');
+    document.getElementById('reveal1').className = 'verse-reveal';
+    document.getElementById('nextBtn1').classList.remove('show');
 }
 
-function pick(btn, chosen, q) {
-    if (answered) return;
-    answered = true;
-
+function q1Pick(btn, chosen, q) {
+    if (q1.answered) return;
+    q1.answered = true;
     const isRight = chosen === q.correct || (q.correctAlt && chosen === q.correctAlt);
-    const btns = document.querySelectorAll('.opt');
-
-    btns.forEach(b => {
+    document.querySelectorAll('#opts1 .opt').forEach(b => {
         b.classList.add('disabled');
-        const txt = b.querySelector('span:last-child').textContent;
-        if (txt === q.correct || (q.correctAlt && txt === q.correctAlt)) {
-            b.classList.add('correct');
-        }
+        const txt = b.querySelector('.opt-text').textContent;
+        if (txt === q.correct || (q.correctAlt && txt === q.correctAlt)) b.classList.add('correct');
     });
-
-    const rev = document.getElementById('reveal');
-
+    const rev = document.getElementById('reveal1');
     if (isRight) {
-        ok++;
-        btn.classList.add('correct');
+        q1.ok++; btn.classList.add('correct');
         rev.className = 'verse-reveal show';
-        document.getElementById('revLabel').textContent = '✅ Riktig! Her er verset:';
+        document.getElementById('revLabel1').textContent = '✅ Riktig! Her er verset:';
     } else {
-        fail++;
-        btn.classList.add('wrong');
+        q1.fail++; btn.classList.add('wrong');
         rev.className = 'verse-reveal wrong-box show';
-        document.getElementById('revLabel').textContent = '❌ Feil! Riktig svar var ' + q.correct + '. Her er verset:';
-        wrongs.push({ qText: q.text, yours: chosen, correct: q.correct, ref: q.ref });
+        document.getElementById('revLabel1').textContent = '❌ Feil! Riktig svar var ' + q.correct + '. Her er verset:';
+        q1.wrongs.push({ qText: q.text, yours: chosen, correct: q.correct, ref: q.ref });
     }
-
-    document.getElementById('revRef').textContent = '📖 ' + q.ref;
-    document.getElementById('revArabic').textContent = q.arabic;
-
+    document.getElementById('revRef1').textContent = '📖 ' + q.ref;
+    document.getElementById('revArabic1').textContent = q.arabic;
     let norskHTML = q.norsk;
-    // If there's a second verse, show both
     if (q.arabic2) {
-        document.getElementById('revArabic').innerHTML = q.arabic + '<br><br>' + q.arabic2;
+        document.getElementById('revArabic1').innerHTML = q.arabic + '<br><br>' + q.arabic2;
         norskHTML = q.norsk + '<br><br>' + q.norsk2;
     }
-    document.getElementById('revNorsk').innerHTML = norskHTML;
-
-    document.getElementById('cOk').textContent = ok;
-    document.getElementById('cFail').textContent = fail;
-
-    const nb = document.getElementById('nextBtn');
-    nb.textContent = idx < order.length - 1 ? 'Neste →' : 'Se resultater →';
+    document.getElementById('revNorsk1').innerHTML = norskHTML;
+    document.getElementById('cOk1').textContent = q1.ok;
+    document.getElementById('cFail1').textContent = q1.fail;
+    const nb = document.getElementById('nextBtn1');
+    nb.textContent = q1.idx < q1.order.length - 1 ? 'Neste →' : 'Se resultater →';
     nb.classList.add('show');
-    setTimeout(() => nb.scrollIntoView({ behavior: 'smooth', block: 'nearest' }), 100);
+    setTimeout(() => nb.scrollIntoView({ behavior:'smooth', block:'nearest' }), 100);
 }
 
-function next() {
-    idx++;
-    if (idx >= order.length) return showResults();
-    render();
+function q1Next() {
+    q1.idx++;
+    if (q1.idx >= q1.order.length) return q1Results();
+    q1Render();
 }
 
-function showResults() {
-    document.getElementById('quiz').classList.add('hidden');
-    const r = document.getElementById('results');
-    r.classList.add('show');
-
-    const pct = Math.round(ok / order.length * 100);
-    document.getElementById('finalPct').textContent = pct + '%';
-    document.getElementById('rTotal').textContent = order.length;
-    document.getElementById('rOk').textContent = ok;
-    document.getElementById('rFail').textContent = fail;
-
-    let msg = '';
-    if (pct === 100) msg = 'Mashaa Allah! Perfekt! Du kan alle referansene! 🌟';
-    else if (pct >= 80) msg = 'Veldig bra! Fortsett å repetere de du fikk feil på 📖';
-    else if (pct >= 60) msg = 'Bra innsats! Repeter referansene litt til 💪';
-    else msg = 'Ikke gi opp! Gå gjennom referansene og prøv igjen 🤲';
-    document.getElementById('finalMsg').textContent = msg;
-
-    const sec = document.getElementById('reviewSection');
-    if (wrongs.length) {
+function q1Results() {
+    document.getElementById('quiz1').classList.add('hidden');
+    document.getElementById('results1').classList.add('show');
+    const pct = Math.round(q1.ok / q1.order.length * 100);
+    document.getElementById('finalPct1').textContent = pct + '%';
+    document.getElementById('rTotal1').textContent = q1.order.length;
+    document.getElementById('rOk1').textContent = q1.ok;
+    document.getElementById('rFail1').textContent = q1.fail;
+    document.getElementById('finalMsg1').textContent = getMsg(pct);
+    const sec = document.getElementById('reviewSection1');
+    if (q1.wrongs.length) {
         let h = '<h3>📋 Referanser du bør repetere:</h3>';
-        wrongs.forEach((w, i) => {
-            h += `<div class="review-item">
-                <div class="ri-q"><strong>${i + 1}.</strong> ${w.qText}</div>
-                <div class="ri-your">❌ Ditt svar: ${w.yours}</div>
-                <div class="ri-correct">✅ Riktig: ${w.ref}</div>
-            </div>`;
+        q1.wrongs.forEach((w,i) => {
+            h += `<div class="review-item"><div class="ri-q"><strong>${i+1}.</strong> ${w.qText}</div><div class="ri-your">❌ Ditt svar: ${w.yours}</div><div class="ri-correct">✅ Riktig: ${w.ref}</div></div>`;
         });
         sec.innerHTML = h;
     } else sec.innerHTML = '';
 }
 
-// Keyboard: a/b/c or 1/2/3, Enter for next
-document.addEventListener('keydown', e => {
-    if (document.getElementById('quiz').classList.contains('hidden')) return;
-    const map = { '1':0, '2':1, '3':2, 'a':0, 'b':1, 'c':2 };
-    const i = map[e.key.toLowerCase()];
-    if (i !== undefined && !answered) {
-        const btns = document.querySelectorAll('.opt');
-        if (btns[i]) btns[i].click();
+/* ============================================================
+   TAB 2: PRØVEEKSAMEN  (30 spørsmål, 2 poeng per stykk)
+   ============================================================ */
+const q2Data = [
+    { text:"Hva het den lærde fra Hanafi-lovskolen som skrev en av de mest omfattende kommentarene av boken al-Aqidah al-Tahawiyyah som vi bruker mye i undervisningen?", opts:["Imam Ibn Abidin al-Hanafi","Imam Ibn Abi al-Izz al-Hanafi","Imam Ibn Kamal al-Hanafi"], correct:1 },
+    { text:"Hva er den viktige koranreferansen om at Allah gjør det Han vil?", opts:["Koranen, 12:34","Koranen, 23:05","Koranen, 85:16"], correct:2 },
+    { text:"Hva betyr begrepet Ta'teel?", opts:["Det er det å nekte at Allah har egenskaper","Det er det å mene at Allah ligner skapelsen","Det er det å forhøye Allah og erklære at Han er fri fra enhver mangel"], correct:0 },
+    { text:"Hva skiller Iradah Shar'iyyah fra Iradah Kawniyyah?", opts:["Iradah Shar'iyyah er Allahs vilje som er knyttet til det Han elsker og Iradah Kawniyyah er Allahs vilje knyttet til alt annet, som også inkluderer det Han ikke liker","Iradah Kawniyyah er Allahs vilje knyttet til straff og katastrofer og Iradah Shar'iyyah er kun knyttet til livslengder","Iradah Shar'iyyah er Allahs vilje som er knyttet til belønninger og Iradah Kawniyyah er kun knyttet til skapelsen"], correct:0 },
+    { text:"Hva er de seks søylene av troen (Arkan al-Iman) som enhver muslim må tro på og som er grunnlaget av den islamske troslæren?", opts:["Å tro på Allah, engler, bøker, 'Isa sin tilbakekomst, Dommedagen og Skjebnen","Å tro på Allah, bøker, engler, Dommedagen, Paradiset og Helvetet, og profeter","Å tro på Allah, bøker, engler, profeter, Dommedagen og Skjebnen"], correct:2 },
+    { text:"Hvordan skjer misledelse (dalalah)?", opts:["Misledelse skjer som et resultat av Allahs Qadar basert på Hans rettferdighet og at et menneske har gjort en ugjerning som gjør ham fortjent til å bli misledet","Misledelse skjer som et resultat utelukkende av Allahs forutbestemmelse","Misledelse skjer som et resultat utelukkende av menneskets fri vilje og valg av å avvise sannheten"], correct:0 },
+    { text:"Hva kan 3 eksempler på nye emner vedrørende Aqidah som har oppstått i vår moderne tid, være?", opts:["Evighetsaspektet av Paradiset og Helvete, menneskets fri vilje, Profetskapet","Ytringsfrihet, evolusjon og menneskets opprinnelse, kjønnsidentitet og Guds skapelse","Opprør mot ledere, demokrati, sekularisme"], correct:1 },
+    { text:"Hva kan 3 eksempler på emner som det har vært uenighet om i Ummah vedrørende Aqidah, være?", opts:["Koranens opprinnelse, Allahs eksistens, straffen i graven","Opprør (khuruj) mot muslimske ledere, troen på engler, hvordan universet ble til","Troens realitet, ufeilbarhet ('ismah), Å se Allah i det hinsidige"], correct:2 },
+    { text:"Hva er beviset fra Koranen om at Allah gir rizq til enhver skapning?", opts:["Koranen, 11:6","Koranen, 2:102","Koranen, 3:91"], correct:0 },
+    { text:"Hva er det første temaet som blir tatt opp i boken al-Aqidah al-Tahawiyyah?", opts:["Koranens opprinnelse","Tawhid","Sunnah"], correct:1 },
+    { text:"Hvorfor kaller Imam Ibn Abi al-Izz Aqidah for å være den viktigste og mest ærefulle vitenskapen?", opts:["Fordi faget handler om å lære seg teknikker som man bruker for å forsvare Islam","Fordi faget handler om å lære seg om Allah; Hans Navn, Egenskaper og Handlinger","Fordi faget handler om å lære hva Salaf trodde på"], correct:1 },
+    { text:"Hvem skrev boken al-Aqidah al-Tahawiyyah og hvor kom han fra og hvilken lovskole fulgte han?", opts:["Imam Ibn Daqiq al-'Id, fra Egypt, Shafi'","Imam Ahmad ibn Muhammad al-Tahawi, fra Egypt, var først Shafi' og ble Hanafi","Imam al-Muzani, fra Egypt, var Shafi' og en nær student av Imam al-Shafi'i"], correct:1 },
+    { text:"Hvorfor er det feil å si at Allah ble kalt Giveren av liv (al-Muhyi) etter at Han ga liv til skapelsen?", opts:["Fordi det er kristne og jøder som har sagt lignende påstander om Gud","Fordi da vil det bety at Allah oppnådde en egenskap Han ikke hadde før, og dette vil også bety at Han hadde en mangel","Fordi da vil man mene det samme som Mu'tazilah mente i det de fornektet Allahs handlingsbaserte egenskaper"], correct:1 },
+    { text:"Hva er beviset fra Koranen at det er umulig at det finnes to skapere?", opts:["Koranen, 23:91","Koranen, 12:3","Koranen, 112:1"], correct:0 },
+    { text:"Hva betyr at Allah skaper uten et behov?", opts:["Det betyr at Allah skapte skapelsen alene uten en partner som hjalp til","Det betyr at Allah skapte skapelsen men er ikke avhengig av dem","Det betyr at Allah skapte skapelsen men Han er totalt uavhengig av den på den måten at skapelsen ikke tilføyer Ham noe, ei heller minker Han i noe ved å ikke skape dem"], correct:2 },
+    { text:"Det er to skapninger som Allah har skapt og pålagt dem å følge Hans Shariah, hvem er disse to?", opts:["Engler og mennesker","Jinner og mennesker","Jinner og Engler"], correct:1 },
+    { text:"Hva av følgende er et eksempel på Sifat Dhatiyyah?", opts:["Kunnskap","Forsørgelse","Skaping"], correct:0 },
+    { text:"Hva er de to kjerneegenskaper av Allah som Han behandler Hans tjenere med?", opts:["Kunnskap og Hørsel","Nåde og Rettferdighet","Tilgivelse og Rettferdighet"], correct:1 },
+    { text:"Hvis alt skjer med Allahs vilje, hvorfor holdes mennesket ansvarlig da?", opts:["Fordi mennesket har blitt pålagt til å tilbe Allah med tvang","Fordi mennesket har blitt velsignet med en fri vilje som er uavhengig","Fordi mennesket handler frivillig, med vilje og evne Allah har gitt det, uten tvang"], correct:2 },
+    { text:"Hva kalles de egenskapene av Allah som er relatert til Hans Essens?", opts:["Sifat Azaliyyah (صِفَاتٌ أَزَلِيَّةٌ)","Sifat Fi'liyyah (صِفَاتٌ فِعْلِيَّةٌ)","Sifat Dhatiyyah (صِفَاتٌ ذَاتِيَّةٌ)"], correct:2 },
+    { text:"Hva betyr egentlig 'Adl og Fadl i forhold til Allahs samhandling med menneskenes gjerninger?", opts:["Det betyr at Allah belønner og straffer ifølge Hans visdom og rettferdighet","Det betyr at Allah belønner mer enn fortjent ved Hans Fadl og straffer ikke mer enn fortjent ved Hans 'Adl","Det betyr at Allah behandler hvert menneske utelukkende med Hans Barmhjertighet"], correct:1 },
+    { text:"Allahs vilje (Iradah) inndeles i to typer, hvilke er de?", opts:["Iradah Dhatiyyah (Essensiell vilje) og Iradah Fi'liyyah (Handlingsbasert vilje)","Iradah Uluhiyyah (Guddommelig vilje) og Iradah Shar'iyyah (Lovmessig vilje)","Iradah Kawniyyah (Universell vilje) og Iradah Shar'iyyah (Lovmessig vilje)"], correct:2 },
+    { text:"Hva betyr begrepet Tanzih (transcendens)?", opts:["Å tro at Allah er den eneste Skaperen og at Han hadde den egenskapen selv før Han skapte noe","Å tro at Allah er fri fra alle mangler og hevet over alle skapninger og ulik skapningene på alle måter og helt adskilt fra skapelsen","Å tro at Allah har egenskaper som må være evige med Ham og at de er ulike skapningenes egenskaper"], correct:1 },
+    { text:"Ahlu Sunnah wal Jama'ah betyr de som kun følger Koranen og dens tolkning ifølge de tidligste lærde (al-Salaf al-Salih).", opts:["Sant","Usant"], correct:1 },
+    { text:"Kristne har hatt en betydelig innflytelse på de tidligste debattene om Allahs Egenskaper. De selv hadde i flere århundre heftige debatter om Jesu natur i forhold til Gud. En referanse fra Bibelen som forårsaket dette er omtalen av Jesus som Guds Ord (Logos) i begynnelsen av Johannes Evangeliet, kapittel 1: vers 1.", opts:["Sant","Usant"], correct:0 },
+    { text:"Hvorfor er det feil å si at Allahs Egenskaper er selvstendige Entiteter utenfor Ham?", opts:["Fordi dette er kufr som Perserne trodde på","Fordi dette er det kristne og jøder mener","Fordi dette fører til en teologisk motsetning kalt ta'addud al-Qudama (flere evige vesener)"], correct:2 },
+    { text:"Imam Ibn Abi al-Izz nevner tre rasjonelle argumenter at Allah må skape med kunnskap og den første av dem er:", opts:["Skapelse uten kunnskap er umulig og den skapelsen vi ser kan ikke ha skjedd ved uvitenhet. Derfor må Skaperen ha absolutt og fullkommen kunnskap","Den presisjonen, den nøyaktige sammenhengen og den harmonien vi ser i skapelsen peker til en kunnskapsrik skaper","Vi har sett at noen skapninger har kunnskap så Skaperen må ha et helt annet nivå av fullkommen kunnskap"], correct:0 },
+    { text:"Hva brukes begrepet Ajal for i Koranen?", opts:["I Koranen brukes det for å beskrive tid","I Koranen brukes det for å beskrive skjebner","I Koranen brukes det for å beskrive at Allah har skapt skapninger og gitt dem en fastbestemt levetid"], correct:2 },
+    { text:"Hva er beviset fra Koranen på at Profeten (ﷺ) er det siste sendebudet?", opts:["Koranen, 33:40","Koranen, 3:18","Koranen, 29:1"], correct:0 },
+    { text:"Hvilken rolle har gode gjerninger ifølge Ahlu Sunnah med tanke på menneskenes frelse på Dommedagen?", opts:["Gode gjerninger har ingen verdi siden vi ikke har fri vilje","Gode gjerninger er viktige siden vi har fri vilje og vi skaper dem selv","Gode gjerninger er viktige siden vi har fri vilje og Allah gjorde dem til årsaker for å oppnå Paradiset"], correct:2 }
+];
+
+let q2 = { order:[], idx:0, ok:0, fail:0, answered:false, wrongs:[] };
+
+function q2Start() {
+    q2 = { order: shuffle([...Array(q2Data.length).keys()]), idx:0, ok:0, fail:0, answered:false, wrongs:[] };
+    document.getElementById('results2').classList.remove('show');
+    document.getElementById('quiz2').classList.remove('hidden');
+    q2Render();
+}
+
+function q2Render() {
+    q2.answered = false;
+    const q = q2Data[q2.order[q2.idx]];
+    document.getElementById('counter2').textContent = `Spørsmål ${q2.idx+1} / ${q2.order.length}`;
+    document.getElementById('cOk2').textContent = q2.ok;
+    document.getElementById('cFail2').textContent = q2.fail;
+    document.getElementById('bar2').style.width = (q2.idx / q2.order.length * 100) + '%';
+    document.getElementById('qNum2').textContent = `Spørsmål nr. ${q2.idx+1} (2 poeng)`;
+    document.getElementById('qText2').innerHTML = q.text;
+    const letters = ['a','b','c','d'];
+    const box = document.getElementById('opts2');
+    box.innerHTML = '';
+    q.opts.forEach((o,i) => {
+        const btn = document.createElement('button');
+        btn.className = 'opt';
+        btn.innerHTML = `<span class="letter">${letters[i]}</span><span class="opt-text">${o}</span>`;
+        btn.onclick = () => q2Pick(btn, i, q);
+        box.appendChild(btn);
+    });
+    document.getElementById('reveal2').className = 'explain-reveal';
+    document.getElementById('nextBtn2').classList.remove('show');
+}
+
+function q2Pick(btn, chosen, q) {
+    if (q2.answered) return;
+    q2.answered = true;
+    const isRight = chosen === q.correct;
+    const btns = document.querySelectorAll('#opts2 .opt');
+    btns.forEach((b,i) => {
+        b.classList.add('disabled');
+        if (i === q.correct) b.classList.add('correct');
+    });
+    const rev = document.getElementById('reveal2');
+    if (isRight) {
+        q2.ok++; btn.classList.add('correct');
+        rev.className = 'explain-reveal show';
+        document.getElementById('revLabel2').textContent = '✅ Riktig! +2 poeng';
+        document.getElementById('revText2').textContent = 'Riktig svar: ' + q.opts[q.correct];
+    } else {
+        q2.fail++; btn.classList.add('wrong');
+        rev.className = 'explain-reveal wrong-box show';
+        document.getElementById('revLabel2').textContent = '❌ Feil! 0 poeng';
+        document.getElementById('revText2').textContent = 'Riktig svar var: ' + q.opts[q.correct];
+        q2.wrongs.push({ qText: q.text, yours: q.opts[chosen] || '(intet svar)', correct: q.opts[q.correct] });
     }
-    if (e.key === 'Enter' && answered) next();
+    document.getElementById('cOk2').textContent = q2.ok;
+    document.getElementById('cFail2').textContent = q2.fail;
+    const nb = document.getElementById('nextBtn2');
+    nb.textContent = q2.idx < q2.order.length - 1 ? 'Neste →' : 'Se resultater →';
+    nb.classList.add('show');
+    setTimeout(() => nb.scrollIntoView({ behavior:'smooth', block:'nearest' }), 100);
+}
+
+function q2Next() {
+    q2.idx++;
+    if (q2.idx >= q2.order.length) return q2Results();
+    q2Render();
+}
+
+function q2Results() {
+    document.getElementById('quiz2').classList.add('hidden');
+    document.getElementById('results2').classList.add('show');
+    const pct = Math.round(q2.ok / q2.order.length * 100);
+    document.getElementById('finalPct2').textContent = pct + '%';
+    document.getElementById('rTotal2').textContent = q2.order.length;
+    document.getElementById('rOk2').textContent = q2.ok;
+    document.getElementById('rFail2').textContent = q2.fail;
+    document.getElementById('rPoints2').textContent = (q2.ok * 2) + ' / ' + (q2.order.length * 2);
+    document.getElementById('finalMsg2').textContent = getMsg(pct);
+    const sec = document.getElementById('reviewSection2');
+    if (q2.wrongs.length) {
+        let h = '<h3>📋 Spørsmål du bør repetere:</h3>';
+        q2.wrongs.forEach((w,i) => {
+            h += `<div class="review-item"><div class="ri-q"><strong>${i+1}.</strong> ${w.qText}</div><div class="ri-your">❌ Ditt svar: ${w.yours}</div><div class="ri-correct">✅ Riktig: ${w.correct}</div></div>`;
+        });
+        sec.innerHTML = h;
+    } else sec.innerHTML = '';
+}
+
+/* ============================================================
+   TAB 3: OPPSUMMERING QUIZ  (68 spørsmål)
+   ============================================================ */
+const q3Data = [
+    { text:"Hva er den språklige definisjonen av begrepet Aqidah?", opts:["Å tro på Allah uten tvil","Å knytte noe med styrke","De seks søylene av troen"], correct:1 },
+    { text:"Hvilken hadith gir den profetiske definisjonen av al-Iman (Aqidah)?", opts:["Hadith Jibril","Hadith al-Niyyah","Hadith al-Arba'in"], correct:0 },
+    { text:"Hva er andre navn for faget Aqidah? Velg det riktige alternativet:", opts:["Al-Fiqh al-Asghar","Usul al-Din","Al-Hadith"], correct:1 },
+    { text:"Ifølge forelesningen, hva er forholdet mellom menneskelig fornuft ('Aql) og åpenbaring (Wahy)?", opts:["Fornuften er nok alene til å forstå all tro","Åpenbaring er ikke nødvendig hvis man har fornuft","Fornuften trenger åpenbaringens lys for å forstå troens detaljer"], correct:2 },
+    { text:"Når levde Imam al-Tahawi?", opts:["139H–221H","239H–321H","339H–421H"], correct:1 },
+    { text:"Hvilken madhab tilhørte Imam Ibn Abi al-'Izz?", opts:["Maliki","Shafi'i","Hanafi"], correct:2 },
+    { text:"Hva er tittelen på Imam al-Tahawi's berømte tekst om Aqidah?", opts:["Al-Wasitiyyah","Al-'Aqidah al-Tahawiyyah","Al-Aqidah al-Sahihah"], correct:1 },
+    { text:"Hvem skrev den mest omfattende kommentaren til al-'Aqidah al-Tahawiyyah?", opts:["Ibn Taymiyyah","Ibn Abi al-'Izz","Al-Ghazali"], correct:1 },
+    { text:"Hvilken metodologi fulgte Ibn Abi al-'Izz i sin forklaring?", opts:["Ash'ari","Maturidi","Athari"], correct:2 },
+    { text:"I hvilket vers fra Koranen sier Allah den Opphøyde at ingenting er lik Ham?", opts:["Suratul Kahf, 18:51","Suratul Shura, 42:11","Suratul Falaq, 113:2"], correct:1 },
+    { text:"Hva var det viktigste som alle profetene (fred være med dem) kalte deres folk til?", opts:["Å tilbe Allah alene (Tawhid) og advare fra avgudsdyrkelse (Shirk)","Å være rettferdige","Å være gavmilde"], correct:0 },
+    { text:"Hvor mange kategorier av Tawhid finnes det?", opts:["2","3","4"], correct:1 },
+    { text:"Hva betyr Tawhid al-Rububiyyah?", opts:["Tilbedelsens Tawhid","Herredømmets Tawhid","Navnenes Tawhid"], correct:1 },
+    { text:"Hvilket koranvers viser at det er umulig at det finnes to guder?", opts:["23:91","16:36","112:4"], correct:0 },
+    { text:"Hva betyr begrepet Tanzih?", opts:["Å sammenligne Allah med skapelsen","Å tro at Allah er fri fra alle mangler og hevet over alle skapninger","Å nekte Allahs egenskaper"], correct:1 },
+    { text:"Hvilken sekt praktiserte Ta'til (nekting av Allahs egenskaper)?", opts:["Khawarij","Mu'tazilah","Murji'ah"], correct:1 },
+    { text:"Allahs vilje (Iradah) inndeles i to typer, hvilke er de?", opts:["Iradah Dhatiyyah og Iradah Fi'liyyah","Iradah Uluhiyyah og Iradah Shar'iyyah","Iradah Kawniyyah og Iradah Shar'iyyah"], correct:2 },
+    { text:"Hva er Wajib al-Wujud?", opts:["Allah har frivillig eksistens","Allahs eksistens er nødvendig","Allah kan velge å ikke eksistere"], correct:1 },
+    { text:"Hva betyr Tashbih?", opts:["Å heve Allah over skapelsen","Å beskrive Allah ved å sammenligne Ham med skapelsen","Å nekte Allahs egenskaper"], correct:1 },
+    { text:"Allahs egenskaper inndeles i to kategorier, hvilke er de?", opts:["Sifat Dhatiyyah og Sifat Fi'liyyah","Sifat Abadiyyah og Sifat Haditiyyah","Sifat Zahiriyyah og Sifat Batiniyyah"], correct:0 },
+    { text:"Hva er Sifat Dhatiyyah?", opts:["Handlingsbaserte egenskaper","Essensielle egenskaper Allah alltid har hatt","Midlertidige egenskaper"], correct:1 },
+    { text:"Hvilket navn av Allah betyr «Den Levende som aldri dør»?", opts:["Al-Qayyum","Al-Hayy","Al-Qadir"], correct:1 },
+    { text:"Hva betyr Al-Qayyum?", opts:["Den Skapende","Den Selvopprettholdende","Den Barmhjertige"], correct:1 },
+    { text:"Hvorfor kan vi ikke si at Allahs egenskaper er selvstendige eksisterende utenfor Hans essens?", opts:["Fordi da vil vi ha flere evige entiteter (Ta'addud al-Qudama) og dette er shirk","Fordi majoriteten av kristne lærde mente det samme","Fordi Mutazila-bevegelsen mente det"], correct:0 },
+    { text:"Hva er Al-Kamal al-Mutlaq?", opts:["Relativ fullkommenhet","Absolutt fullkommenhet","Ufullkommen perfeksjon"], correct:1 },
+    { text:"Hvilket koranvers beviser at Allah gir forsørgelse (rizq)?", opts:["11:6","16:97","23:91"], correct:0 },
+    { text:"Hva sier Koranen om gjenoppstandelse sammenlignet med første skapelse?", opts:["Det er vanskeligere","Det er like lett","Det er lettere"], correct:2 },
+    { text:"Hvilket koranvers sier «Han gjør det Han vil»?", opts:["85:16","42:11","21:23"], correct:0 },
+    { text:"Hva er navnet på verset som beskriver Allah som Al-Hayy Al-Qayyum?", opts:["Ayat al-Birr","Ayat al-Kursi","Ayat al-Nur"], correct:1 },
+    { text:"Hvilket koranvers sier «Sannelig, Vi har skapt enhver ting med en skjebne»?", opts:["54:49","76:30","37:96"], correct:0 },
+    { text:"Hvor mange nivåer har Qadar (skjebnen)?", opts:["2","3","4"], correct:2 },
+    { text:"Hvilket koranvers beviser at menneskets vilje er underlagt Allahs vilje?", opts:["«Allah har skapt dere og det dere gjør» (37:96)","«Dere kan ikke ville bortsett fra hvis Allah vil» (76:30)","«Ingen gud unntatt Allah» (21:25)"], correct:1 },
+    { text:"Hva er Ajal Mubram?", opts:["Betinget levetid","Endelig levetid som kun Allah vet","Levetid som kan endres"], correct:1 },
+    { text:"Hvilket koranvers beviser at Allah har skapt våre handlinger?", opts:["76:30","37:96","54:49"], correct:1 },
+    { text:"Hva er Taklif?", opts:["Moralsk ansvar","Tilgivelse","Skjebne"], correct:0 },
+    { text:"Hva kreves for å være mukallaf (ansvarlig)?", opts:["Kun tro","Pubertet og fornuft","Kun alder"], correct:1 },
+    { text:"Hva betyr 'Adl i forhold til Allahs egenskaper?", opts:["Nåde","Rettferdighet","Visdom"], correct:1 },
+    { text:"Hva betyr Fadl?", opts:["Straff","Rettferdighet","Nåde/gunst"], correct:2 },
+    { text:"Er Paradiset en belønning basert på gjerningers «pris» (thaman) eller gjennom Allahs nåde?", opts:["Gjerningers pris","Allahs nåde","Begge deler likt"], correct:1 },
+    { text:"Hvilket koranvers viser at gode gjerninger er årsak (sabab) til Paradiset, men ikke prisen?", opts:["2:286","7:43","51:56"], correct:1 },
+    { text:"Hva er hidayah?", opts:["Villfarelse","Veiledning","Straff"], correct:1 },
+    { text:"Hvilket koranvers sier «Allah vil aldri utsette en sjel når dens fastsatte tid har kommet»?", opts:["63:11","54:49","76:30"], correct:0 },
+    { text:"Hva er profetens fremste status?", opts:["Konge","Allahs utvalgte tjener ('Abd)","Profet"], correct:1 },
+    { text:"Hvilket koranvers beviser at Muhammad ﷺ er profetenes segl?", opts:["17:1","33:40","34:28"], correct:1 },
+    { text:"Hva betyr «Khatam al-Nabiyyin»?", opts:["De beste av profetene","Profetenes segl/den siste profet","Profetenes leder"], correct:1 },
+    { text:"Hva er forskjellen mellom Nabi og Rasul?", opts:["Nabi er høyere enn Rasul","Rasul er sendt med budskap, ofte til et folk med motstand","Det er ingen forskjell"], correct:1 },
+    { text:"Hvilket koranvers beviser profetens universelle sendelse?", opts:["33:40","34:28","17:1"], correct:1 },
+    { text:"Hva betyr tittelen «Khalil Allah»?", opts:["Allahs tjener","Allahs venn","Allahs sendebud"], correct:1 },
+    { text:"Hvilken annen profet hadde tittelen «Khalil Allah»?", opts:["Musa عليه السلام","Ibrahim عليه السلام","Isa عليه السلام"], correct:1 },
+    { text:"Til hvem ble profeten Muhammad ﷺ sendt?", opts:["Kun arabere","Kun mennesker","Hele menneskeheten og jinnene"], correct:2 },
+    { text:"Hva er 'Ubudiyyah?", opts:["Profetskap","Tjenerskap","Lederskap"], correct:1 },
+    { text:"Ahl al-Sunnah wal-Jama'ah unngår både ghuluww (overdrivelse) og tafrit (underdrivelse) i forhold til profeten. Dette betyr:", opts:["Vi overglorifierer profeten","Vi undervurderer profetens status","Vi holder en balansert posisjon"], correct:2 },
+    { text:"Trosbekjennelsen (La ilaha illa Allah) består av to deler ifølge de lærde. Hva er disse?", opts:["Godkjenning og herliggjøring","Negasjon og forherligelse","Benektelse (Nafy) og bekreftelse (Ithbat)"], correct:2 },
+    { text:"Ahlu Sunnah wal-Jama'ah betyr de som kun følger Koranen og dens tolkning ifølge de tidligste lærde (al-Salaf al-Salih).", opts:["Sant","Usant"], correct:1 },
+    { text:"Hvilket fag har andre betegnelser som Usul al-Din, al-Tawhid og al-Fiqh al-Akbar?", opts:["Fiqh","Aqidah","Hadith"], correct:1 },
+    { text:"Hva er de seks søylene av Iman (Arkan al-Iman)?", opts:["Shahada, Salah, Zakat, Sawm, Hajj, Jihad","Tro på Allah, engler, bøker, sendebud, siste dag, Qadar","Tawhid, Salah, Zakat, Sawm, Hajj, Jihad"], correct:1 },
+    { text:"Hva gjorde Mu'tazilah-sekten med Allahs egenskaper?", opts:["De bekreftet alle egenskaper","De nektet Allahs egenskaper (Ta'til)","De sammenlignet Allahs egenskaper med skapningens"], correct:1 },
+    { text:"Hvilken hadith definerer Iman som de seks søylene?", opts:["Hadith al-Niyyah","Hadith Jibril","Hadith al-Thaqalayn"], correct:1 },
+    { text:"Hva er al-Lawh al-Mahfudh?", opts:["Profetens bok","Den bevarte tavle hvor alt er nedskrevet","Englenes bok"], correct:1 },
+    { text:"Hvor lenge før skapelsen av himlene og jorden skrev Allah alt i al-Lawh al-Mahfudh?", opts:["10 000 år","50 000 år","100 000 år"], correct:1 },
+    { text:"Hva kalles villfarelse på arabisk?", opts:["Hidayah","Dalalah","Istiqamah"], correct:1 },
+    { text:"Silat al-Rahim (å opprettholde slektsbånd) kan påvirke:", opts:["Kun belønning i det hinsidige","Ajal Mu'allaq (betinget levetid)","Ajal Mubram (endelig levetid)"], correct:1 },
+    { text:"Hvilket koranvers sier «Jeg har ikke skapt jinner og mennesker unntatt for at de skal tilbe Meg»?", opts:["2:286","51:56","67:2"], correct:1 },
+    { text:"Hva betyr al-Salaf al-Salih?", opts:["De senere generasjoner","De rettskafne forgjengere","De lærde i dag"], correct:1 },
+    { text:"Hva er Shirk?", opts:["Vantro","Avgudsdyrkelse – å sette partnere med Allah","Synd"], correct:1 },
+    { text:"Hvilket metodologi er basert på tekstbevis fra Koranen og Sunnah?", opts:["Ash'ari","Maturidi","Athari"], correct:2 },
+    { text:"Hva er Uswah Hasanah?", opts:["Et perfekt eksempel","En god gjerning","En vakker moské"], correct:0 },
+    { text:"Hvilket koranvers sier «Han blir ikke spurt vedrørende det Han gjør, mens de vil bli spurt»?", opts:["85:16","21:23","42:11"], correct:1 }
+];
+
+let q3 = { order:[], idx:0, ok:0, fail:0, answered:false, wrongs:[] };
+
+function q3Start() {
+    q3 = { order: shuffle([...Array(q3Data.length).keys()]), idx:0, ok:0, fail:0, answered:false, wrongs:[] };
+    document.getElementById('results3').classList.remove('show');
+    document.getElementById('quiz3').classList.remove('hidden');
+    q3Render();
+}
+
+function q3Render() {
+    q3.answered = false;
+    const q = q3Data[q3.order[q3.idx]];
+    document.getElementById('counter3').textContent = `Spørsmål ${q3.idx+1} / ${q3.order.length}`;
+    document.getElementById('cOk3').textContent = q3.ok;
+    document.getElementById('cFail3').textContent = q3.fail;
+    document.getElementById('bar3').style.width = (q3.idx / q3.order.length * 100) + '%';
+    document.getElementById('qNum3').textContent = `Spørsmål nr. ${q3.idx+1}`;
+    document.getElementById('qText3').innerHTML = q.text;
+    const letters = ['a','b','c','d'];
+    const box = document.getElementById('opts3');
+    box.innerHTML = '';
+    q.opts.forEach((o,i) => {
+        const btn = document.createElement('button');
+        btn.className = 'opt';
+        btn.innerHTML = `<span class="letter">${letters[i]}</span><span class="opt-text">${o}</span>`;
+        btn.onclick = () => q3Pick(btn, i, q);
+        box.appendChild(btn);
+    });
+    document.getElementById('reveal3').className = 'explain-reveal';
+    document.getElementById('nextBtn3').classList.remove('show');
+}
+
+function q3Pick(btn, chosen, q) {
+    if (q3.answered) return;
+    q3.answered = true;
+    const isRight = chosen === q.correct;
+    const btns = document.querySelectorAll('#opts3 .opt');
+    btns.forEach((b,i) => {
+        b.classList.add('disabled');
+        if (i === q.correct) b.classList.add('correct');
+    });
+    const rev = document.getElementById('reveal3');
+    if (isRight) {
+        q3.ok++; btn.classList.add('correct');
+        rev.className = 'explain-reveal show';
+        document.getElementById('revLabel3').textContent = '✅ Riktig!';
+        document.getElementById('revText3').textContent = 'Bra jobbet! Riktig svar: ' + q.opts[q.correct];
+    } else {
+        q3.fail++; btn.classList.add('wrong');
+        rev.className = 'explain-reveal wrong-box show';
+        document.getElementById('revLabel3').textContent = '❌ Feil!';
+        document.getElementById('revText3').textContent = 'Riktig svar var: ' + q.opts[q.correct];
+        q3.wrongs.push({ qText: q.text, yours: q.opts[chosen], correct: q.opts[q.correct] });
+    }
+    document.getElementById('cOk3').textContent = q3.ok;
+    document.getElementById('cFail3').textContent = q3.fail;
+    const nb = document.getElementById('nextBtn3');
+    nb.textContent = q3.idx < q3.order.length - 1 ? 'Neste →' : 'Se resultater →';
+    nb.classList.add('show');
+    setTimeout(() => nb.scrollIntoView({ behavior:'smooth', block:'nearest' }), 100);
+}
+
+function q3Next() {
+    q3.idx++;
+    if (q3.idx >= q3.order.length) return q3Results();
+    q3Render();
+}
+
+function q3Results() {
+    document.getElementById('quiz3').classList.add('hidden');
+    document.getElementById('results3').classList.add('show');
+    const pct = Math.round(q3.ok / q3.order.length * 100);
+    document.getElementById('finalPct3').textContent = pct + '%';
+    document.getElementById('rTotal3').textContent = q3.order.length;
+    document.getElementById('rOk3').textContent = q3.ok;
+    document.getElementById('rFail3').textContent = q3.fail;
+    document.getElementById('finalMsg3').textContent = getMsg(pct);
+    const sec = document.getElementById('reviewSection3');
+    if (q3.wrongs.length) {
+        let h = '<h3>📋 Spørsmål du bør repetere:</h3>';
+        q3.wrongs.forEach((w,i) => {
+            h += `<div class="review-item"><div class="ri-q"><strong>${i+1}.</strong> ${w.qText}</div><div class="ri-your">❌ Ditt svar: ${w.yours}</div><div class="ri-correct">✅ Riktig: ${w.correct}</div></div>`;
+        });
+        sec.innerHTML = h;
+    } else sec.innerHTML = '';
+}
+
+/* ============================================================
+   KEYBOARD SHORTCUTS  (a/b/c or 1/2/3, Enter for next)
+   ============================================================ */
+document.addEventListener('keydown', e => {
+    const activeTab = document.querySelector('.tab-content.active');
+    if (!activeTab) return;
+    const tabId = activeTab.id;
+    const map = { '1':0,'2':1,'3':2,'4':3,'a':0,'b':1,'c':2,'d':3 };
+    const i = map[e.key.toLowerCase()];
+
+    if (tabId === 'tab-koranvers') {
+        if (i !== undefined && !q1.answered) { const btns = document.querySelectorAll('#opts1 .opt'); if (btns[i]) btns[i].click(); }
+        if (e.key === 'Enter' && q1.answered) q1Next();
+    } else if (tabId === 'tab-eksamen') {
+        if (i !== undefined && !q2.answered) { const btns = document.querySelectorAll('#opts2 .opt'); if (btns[i]) btns[i].click(); }
+        if (e.key === 'Enter' && q2.answered) q2Next();
+    } else if (tabId === 'tab-oppsummering') {
+        if (i !== undefined && !q3.answered) { const btns = document.querySelectorAll('#opts3 .opt'); if (btns[i]) btns[i].click(); }
+        if (e.key === 'Enter' && q3.answered) q3Next();
+    }
 });
 
-start();
+/* ============================================================
+   INIT
+   ============================================================ */
+q1Start();
+q2Start();
+q3Start();
 </script>
 </body>
 </html>
